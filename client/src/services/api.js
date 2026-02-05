@@ -1,7 +1,8 @@
 // Environment variables
-const CLIENT_ID = import.meta.env.VITE_SBHS_CLIENT_ID;
-const CLIENT_SECRET = import.meta.env.VITE_SBHS_CLIENT_SECRET;
-const REDIRECT_URI = import.meta.env.VITE_SBHS_REDIRECT_URI;
+// Trimming whitespace is crucial as copy-paste often adds invisible breaks
+const CLIENT_ID = import.meta.env.VITE_SBHS_CLIENT_ID?.trim();
+const CLIENT_SECRET = import.meta.env.VITE_SBHS_CLIENT_SECRET?.trim();
+const REDIRECT_URI = import.meta.env.VITE_SBHS_REDIRECT_URI?.trim();
 
 const AUTH_ENDPOINT = 'https://auth.sbhs.net.au/authorize';
 const TOKEN_ENDPOINT = 'https://auth.sbhs.net.au/token';
@@ -20,14 +21,21 @@ export const performLogin = () => {
     return;
   }
 
+  // Generate a random state for security (CSRF protection)
+  const state = Math.random().toString(36).substring(7);
+  sessionStorage.setItem('sbhs_auth_state', state);
+
   const params = new URLSearchParams({
     client_id: CLIENT_ID,
     response_type: 'code',
     scope: SCOPES,
     redirect_uri: REDIRECT_URI,
+    state: state
   });
 
-  window.location.href = `${AUTH_ENDPOINT}?${params.toString()}`;
+  const authUrl = `${AUTH_ENDPOINT}?${params.toString()}`;
+  console.log("Redirecting to Auth:", authUrl); // Debugging aid
+  window.location.href = authUrl;
 };
 
 /**
