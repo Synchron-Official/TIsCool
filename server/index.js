@@ -13,14 +13,7 @@ app.use(cors());
 app.use(express.json());
 
 // Mock Database
-let users = [
-    { id: "430000001", name: "Ali Abbas", year: "12", email: "430000001@student.sbhs.nsw.edu.au", status: "Active", role: "Student" },
-    { id: "430000002", name: "John Smith", year: "11", email: "430000002@student.sbhs.nsw.edu.au", status: "Active", role: "Student" },
-    { id: "430000003", name: "David Chen", year: "10", email: "430000003@student.sbhs.nsw.edu.au", status: "Warning", role: "Student" },
-    { id: "430000004", name: "Michael Park", year: "12", email: "430000004@student.sbhs.nsw.edu.au", status: "Active", role: "Prefect" },
-    { id: "430000005", name: "Sarah Jones", year: "Staff", email: "s.jones@sbhs.nsw.edu.au", status: "Active", role: "Teacher" },
-    { id: "430000006", name: "James Wilson", year: "9", email: "430000006@student.sbhs.nsw.edu.au", status: "Inactive", role: "Student" },
-];
+let users = [];
 
 // Authentication Middleware
 const requireAuth = (req, res, next) => {

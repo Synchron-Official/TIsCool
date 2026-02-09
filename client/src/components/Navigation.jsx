@@ -21,7 +21,6 @@ const Navigation = ({ currentView, setView }) => {
     { id: 'calendar', icon: CalendarDays, label: 'Calendar' },
     { id: 'notices', icon: Newspaper, label: 'Notices' },
     { id: 'profile', icon: UserCircle, label: 'Profile' },
-    { id: 'admin', icon: Settings, label: 'Admin' },
   ];
 
   return (

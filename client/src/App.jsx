@@ -22,6 +22,13 @@ function App() {
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
   const [currentView, setCurrentView] = useState('timetable');
   const [viewDate, setViewDate] = useState(new Date());
+
+  useEffect(() => {
+    // Check if user is navigating exactly to /admin
+    if (window.location.pathname === '/admin') {
+        setCurrentView('admin');
+    }
+  }, []);
   
   const [timetable, setTimetable] = useState(null);
   const [notices, setNotices] = useState(null);
