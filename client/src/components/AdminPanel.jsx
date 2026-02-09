@@ -29,8 +29,6 @@ const AdminPanel = ({ user }) => {
     }
   }, [user]);
 
-  const loadData = async () => {
-    setLoading(true);
 
   const loadData = async () => {
     setLoading(true);
@@ -349,8 +347,6 @@ const AdminPanel = ({ user }) => {
                         </button>
                     </div>
                 </div>
-            </div>
-        )}
             </div>
         )}
 
