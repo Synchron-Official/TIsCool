@@ -1,4 +1,4 @@
-const ADMIN_API_URL = 'https://synchron.work/api';
+const ADMIN_API_URL = import.meta.env.VITE_ADMIN_API_URL || 'http://localhost:3000/api';
 
 const getHeaders = () => {
     const password = import.meta.env.VITE_ADMIN_PASSWORD;
