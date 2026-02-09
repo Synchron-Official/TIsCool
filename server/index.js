@@ -74,7 +74,11 @@ app.get('/health', (req, res) => {
     res.json({ status: 'ok' });
 });
 
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-    console.log(`Admin Password configured: ${!!ADMIN_PASSWORD}`);
-});
+if (require.main === module) {
+    app.listen(PORT, () => {
+        console.log(`Server running on http://localhost:${PORT}`);
+        console.log(`Admin Password configured: ${!!ADMIN_PASSWORD}`);
+    });
+}
+
+module.exports = app;
