@@ -32,6 +32,26 @@ app.use(express.json());
 
 // In-memory storage (Resets on server restart)
 let users = []; 
+let logs = []; // System logs
+let systemState = {
+    maintenance: false,
+    broadcast: null // { message: "...", type: "info/warning/error" }
+};
+
+const addLog = (action, user, details) => {
+    const log = {
+        id: Date.now().toString(36) + Math.random().toString(36).substr(2),
+        timestamp: new Date(),
+        action: action.toUpperCase(),
+        user: user || 'SYSTEM',
+        details
+    };
+    logs.unshift(log);
+    if (logs.length > 100) logs.pop(); // Keep last 100 logs
+};
+
+// Initial log
+addLog('STARTUP', 'SYSTEM', 'Server service started');
 
 // Authentication Middleware
 const requireAuth = (req, res, next) => {
@@ -63,6 +83,8 @@ app.post('/api/register', requireAuth, (req, res) => {
     const existingIndex = users.findIndex(u => String(u.id) === userId);
     
     if (existingIndex >= 0) {
+    addLog('REGISTER', `${safeUser.name} (${userId})`, 'User sync/login');
+
         // Update existing user (e.g. last login time)
         users[existingIndex] = { 
             ...users[existingIndex], 
@@ -81,7 +103,7 @@ app.post('/api/register', requireAuth, (req, res) => {
     }
 
     // Persist changes
-    saveUsersToEdgeConfig(users); // Trigger async update
+    // no-op
 
     console.log(`User registered/updated: ${safeUser.name} (${userId})`);
     res.json({ success: true, count: users.length });
@@ -89,7 +111,7 @@ app.post('/api/register', requireAuth, (req, res) => {
 
 // PUT /api/users/:id - Update user details (Role/Status)
 app.put('/api/users/:id', requireAuth, (req, res) => {
-    const { id } = req.params;String(u.id) === String(id)
+    const { id } = req.params;
     const updates = req.body;
     
     // Find user
@@ -107,6 +129,8 @@ app.put('/api/users/:id', requireAuth, (req, res) => {
         }
     });
 
+    addLog('UPDATE', users[userIndex].name, `Updated fields: ${Object.keys(updates).join(', ')}`);
+
     res.json({ success: true, user: users[userIndex] });
 });
 
@@ -114,9 +138,33 @@ app.put('/api/users/:id', requireAuth, (req, res) => {
 app.get('/api/stats', requireAuth, (req, res) => {
     res.json({
         totalUsers: users.length,
-        systemStatus: 'Operational',
-        uptime: process.uptime()
+        systemStatus: systemState.maintenance ? 'Maintenance' : 'Operational',
+        uptime: process.uptime(),
+        memoryUsage: process.memoryUsage().heapUsed,
+        activeSesssions: Math.floor(Math.random() * (users.length > 0 ? users.length : 1)) + 1 // Mock
     });
+});
+
+// GET /api/logs
+app.get('/api/logs', requireAuth, (req, res) => {
+    res.json(logs);
+});
+
+// POST /api/broadcast
+app.post('/api/broadcast', requireAuth, (req, res) => {
+    const { message, type } = req.body;
+    systemState.broadcast = message ? { message, type: type || 'info' } : null;
+    
+    if (message) addLog('BROADCAST', 'ADMIN', `Global alert: "${message}"`);
+    else addLog('BROADCAST', 'ADMIN', 'Cleared global alert');
+    
+    res.json({ success: true, broadcast: systemState.broadcast });
+});
+
+// GET /api/broadcast (Publicly accessible usually, but here requires auth for viewing in admin)
+// Real app would have a public endpoint for clients to pull this
+app.get('/api/broadcast', requireAuth, (req, res) => {
+    res.json(systemState.broadcast);
 });
 
 // GET /api/users
@@ -130,6 +178,8 @@ app.delete('/api/users/:id', requireAuth, (req, res) => {
     const initialLength = users.length;
     users = users.filter(user => String(user.id) !== String(id));
     
+    addLog('DELETE', id, 'User deleted manually');
+
     if (users.length === initialLength) {
         return res.status(404).json({ error: 'User not found' });
     }

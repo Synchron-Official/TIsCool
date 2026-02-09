@@ -77,6 +77,34 @@ export const clearServerCache = async () => {
     }
 };
 
+export const fetchLogs = async () => {
+    try {
+        const response = await fetch(`${ADMIN_API_URL}/logs`, {
+            headers: getHeaders()
+        });
+        if (!response.ok) throw new Error('Failed to fetch logs');
+        return await response.json();
+    } catch (error) {
+        console.error("Admin API Error:", error);
+        throw error;
+    }
+};
+
+export const setBroadcast = async (message, type = 'info') => {
+    try {
+        const response = await fetch(`${ADMIN_API_URL}/broadcast`, {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify({ message, type })
+        });
+        if (!response.ok) throw new Error('Failed to set broadcast');
+        return await response.json();
+    } catch (error) {
+        console.error("Admin API Error:", error);
+        throw error;
+    }
+};
+
 export const registerUser = async (user) => {
     try {
         const response = await fetch(`${ADMIN_API_URL}/register`, {

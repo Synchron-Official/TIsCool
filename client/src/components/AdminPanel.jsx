@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { Lock, ShieldCheck, AlertCircle, Users, Activity, Settings, Search, MoreVertical, RefreshCw, Trash2, Eye, Edit2, X } from 'lucide-react';
-import { fetchUsers, fetchAdminStats, deleteUser, clearServerCache, updateUser } from '../services/adminApi';
+import React, { useState, useEffect, useRef } from 'react';
+import { Lock, ShieldCheck, AlertCircle, Users, Activity, Settings, Search, MoreVertical, RefreshCw, Trash2, Eye, Edit2, X, Terminal, Radio, MessageSquare, Zap } from 'lucide-react';
+import { fetchUsers, fetchAdminStats, deleteUser, clearServerCache, updateUser, fetchLogs, setBroadcast } from '../services/adminApi';
 import Timetable from './Timetable';
 
 const AdminPanel = ({ user }) => {
@@ -12,8 +12,13 @@ const AdminPanel = ({ user }) => {
   // Data States
   const [users, setUsers] = useState([]);
   const [stats, setStats] = useState(null);
+  const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState(null);
+  
+  // Broadcast State
+  const [broadcastMsg, setBroadcastMsg] = useState('');
+  const [broadcastType, setBroadcastType] = useState('info');
 
   // UI States
   const [activeTab, setActiveTab] = useState('overview');
@@ -29,17 +34,17 @@ const AdminPanel = ({ user }) => {
     }
   }, [user]);
 
-
   const loadData = async () => {
     setLoading(true);
-    setApiError(null);
     try {
-        const [usersData, statsData] = await Promise.all([
+        const [usersData, statsData, logsData] = await Promise.all([
             fetchUsers(),
-            fetchAdminStats()
+            fetchAdminStats(),
+            fetchLogs()
         ]);
         setUsers(usersData);
         setStats(statsData);
+        setLogs(logsData);
     } catch (err) {
         setApiError('Failed to fetch data from server. Ensure backend is running.');
         console.error(err);
@@ -106,7 +111,17 @@ const AdminPanel = ({ user }) => {
           alert("Failed to clear server cache.");
       }
   };
-
+  const handleBroadcast = async (e) => {
+      e.preventDefault();
+      try {
+          await setBroadcast(broadcastMsg, broadcastType);
+          alert("Broadcast updated successfully!");
+          setBroadcastMsg('');
+          loadData(); // Refresh logs
+      } catch (err) {
+          alert("Failed to set broadcast");
+      }
+  };
 
   const filteredUsers = users.filter(user => 
     user.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -160,60 +175,191 @@ const AdminPanel = ({ user }) => {
                 <p className="text-zinc-500 dark:text-zinc-400 mt-2">
                     Manage users and system settings
                 </p>
-                {apiError && (
-                    <div className="flex items-center gap-2 mt-4 text-red-600 bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-200 dark:border-red-800">
-                        <AlertCircle size={16} />
-                        <span className="text-sm">{apiError}</span>
-                    </div>
-                )}
             </div>
-            
-            <div className="flex bg-white dark:bg-zinc-900 p-1 rounded-xl border border-zinc-200 dark:border-zinc-800 self-start md:self-auto">
+            <div className="flex gap-2">
                 <TabButton id="overview" label="Overview" icon={Activity} />
                 <TabButton id="users" label="Users" icon={Users} />
+                <TabButton id="broadcast" label="Broadcast" icon={MessageSquare} />
                 <TabButton id="settings" label="Settings" icon={Settings} />
             </div>
         </header>
 
+        {apiError && (
+             <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded-xl flex items-center gap-3">
+                <AlertCircle size={20} />
+                {apiError}
+            </div>
+        )}
+
         {activeTab === 'overview' && (
-            <div className="grid gap-6 md:grid-cols-3">
-                <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
-                    <div className="flex justify-between items-start">
+            <div className="space-y-6">
+                <div className="grid gap-6 md:grid-cols-4">
+                    <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <Users size={60} />
+                        </div>
                         <div>
                             <p className="text-sm font-medium text-zinc-500">Total Users</p>
-                            <h3 className="text-3xl font-bold text-zinc-900 dark:text-white mt-2">
+                            <h3 className="text-3xl font-bold text-zinc-900 dark:text-white mt-1">
                                 {loading ? '...' : (stats?.totalUsers || users.length || 0)}
                             </h3>
-                        </div>
-                        <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl text-blue-600">
-                            <Users size={24} />
+                            <div className="text-xs text-green-600 mt-2 flex items-center gap-1">
+                                <Zap size={10} fill="currentColor" /> Active Count
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
-                    <div className="flex justify-between items-start">
-                         <div>
+                
+                    <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <Activity size={60} />
+                        </div>
+                        <div>
                             <p className="text-sm font-medium text-zinc-500">System Status</p>
-                            <h3 className="text-3xl font-bold text-green-600 mt-2">
+                            <h3 className="text-3xl font-bold text-green-600 mt-1">
                                 {loading ? '...' : (stats?.systemStatus || 'Operational')}
                             </h3>
-                        </div>
-                        <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-xl text-green-600">
-                            <Activity size={24} />
+                             <div className="text-xs text-zinc-500 mt-2">
+                                Uptime: {stats ? Math.floor(stats.uptime / 60) + 'm' : '0m'}
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
-                    <div className="flex justify-between items-start">
-                         <div>
+
+                    <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <Zap size={60} />
+                        </div>
+                        <div>
+                            <p className="text-sm font-medium text-zinc-500">Server Load</p>
+                             <div className="flex items-end gap-2 mt-1">
+                                <h3 className="text-3xl font-bold text-zinc-900 dark:text-white">
+                                    {stats ? Math.round(stats.memoryUsage / 1024 / 1024) : 0}
+                                </h3>
+                                <span className="text-sm font-medium text-zinc-400 mb-1">MB</span>
+                             </div>
+                             <div className="w-full bg-zinc-100 dark:bg-zinc-800 h-1.5 rounded-full mt-3 overflow-hidden">
+                                <div className="h-full bg-blue-500 rounded-full animate-pulse" style={{ width: '45%' }}></div>
+                            </div>
+                        </div>
+                    </div>
+
+                     <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <Settings size={60} />
+                        </div>
+                        <div>
                             <p className="text-sm font-medium text-zinc-500">Environment</p>
-                            <h3 className="text-3xl font-bold text-zinc-900 dark:text-white mt-2 capitalize">{import.meta.env.MODE}</h3>
-                        </div>
-                        <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-xl text-purple-600">
-                            <Settings size={24} />
+                            <h3 className="text-3xl font-bold text-zinc-900 dark:text-white mt-1 capitalize">{import.meta.env.MODE}</h3>
+                            <div className="text-xs text-zinc-500 mt-2">
+                                v1.2.0-beta
+                            </div>
                         </div>
                     </div>
                 </div>
+
+                {/* Console Log Terminal */}
+                <div className="bg-zinc-950 rounded-2xl overflow-hidden border border-zinc-800 shadow-2xl font-mono text-sm">
+                    <div className="bg-zinc-900 px-4 py-2 flex items-center justify-between border-b border-zinc-800">
+                         <div className="flex items-center gap-2">
+                             <Terminal size={14} className="text-zinc-400" />
+                             <span className="text-zinc-400 font-medium text-xs">root@server:~ logs</span>
+                         </div>
+                         <div className="flex gap-1.5">
+                             <div className="w-2.5 h-2.5 rounded-full bg-red-500/20 text-red-500 border border-red-500/50"></div>
+                             <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/20 text-yellow-500 border border-yellow-500/50"></div>
+                             <div className="w-2.5 h-2.5 rounded-full bg-green-500/20 text-green-500 border border-green-500/50"></div>
+                         </div>
+                    </div>
+                    <div className="p-4 h-64 overflow-y-auto space-y-1 text-zinc-300 custom-scrollbar">
+                         {logs.length === 0 ? (
+                            <div className="text-zinc-600 italic">Waiting for system events...</div>
+                         ) : (
+                             logs.map((log, i) => (
+                                 <div key={i} className="flex gap-3 hover:bg-zinc-900/50 p-0.5 rounded">
+                                     <span className="text-zinc-600 select-none">[{new Date(log.timestamp).toLocaleTimeString()}]</span>
+                                     <span className={`font-bold ${
+                                         log.action === 'ERROR' ? 'text-red-400' :
+                                         log.action === 'WARNING' ? 'text-yellow-400' :
+                                         log.action === 'REGISTER' ? 'text-green-400' :
+                                         log.action === 'STARTUP' ? 'text-blue-400' :
+                                         'text-purple-400'
+                                     }`}>{log.action}</span>
+                                     <span className="text-zinc-500">@</span>
+                                     <span className="text-zinc-400 underline decoration-zinc-800 underline-offset-2">{log.user}</span>
+                                     <span className="text-zinc-300">{log.details}</span>
+                                 </div>
+                             ))
+                         )}
+                         <div className="flex gap-2 animate-pulse mt-2">
+                             <span className="text-green-500">➜</span>
+                             <span className="w-2 h-4 bg-zinc-600 block"></span>
+                         </div>
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {activeTab === 'broadcast' && (
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-8 rounded-2xl shadow-sm max-w-2xl mx-auto">
+                <div className="text-center mb-8">
+                    <div className="w-16 h-16 bg-blue-50 dark:bg-blue-900/20 rounded-2xl flex items-center justify-center mx-auto mb-4 text-blue-600">
+                        <Radio size={32} />
+                    </div>
+                    <h2 className="text-2xl font-bold dark:text-white">System Broadcast</h2>
+                    <p className="text-zinc-500 mt-2">Send a global alert message to all active users</p>
+                </div>
+
+                <form onSubmit={handleBroadcast} className="space-y-6">
+                    <div>
+                        <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">Announcement Message</label>
+                        <textarea 
+                            value={broadcastMsg}
+                            onChange={(e) => setBroadcastMsg(e.target.value)}
+                            className="w-full h-32 px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white resize-none"
+                            placeholder="Type your message here..."
+                            required
+                        />
+                    </div>
+                    
+                    <div>
+                        <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">Alert Type</label>
+                        <div className="grid grid-cols-3 gap-4">
+                            {['info', 'warning', 'error'].map((type) => (
+                                <button
+                                    key={type}
+                                    type="button"
+                                    onClick={() => setBroadcastType(type)}
+                                    className={`py-3 rounded-xl border capitalize font-medium transition-all ${
+                                        broadcastType === type 
+                                            ? type === 'error' ? 'bg-red-50 border-red-500 text-red-700 dark:bg-red-900/20 dark:text-red-400' 
+                                            : type === 'warning' ? 'bg-orange-50 border-orange-500 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400'
+                                            : 'bg-blue-50 border-blue-500 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400'
+                                    : 'bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-700'
+                                    }`}
+                                >
+                                    {type}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="pt-4 flex gap-4">
+                        {broadcastMsg && (
+                            <button
+                                type="button" 
+                                onClick={() => { setBroadcastMsg(''); setBroadcast('', 'info'); }}
+                                className="flex-1 py-3 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-xl font-medium transition-colors"
+                            >
+                                Clear Broadcast
+                            </button>
+                        )}
+                        <button 
+                            type="submit" 
+                            className="flex-[2] py-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-xl font-bold hover:opacity-90 transition-opacity shadow-lg"
+                        >
+                            Send Announcement
+                        </button>
+                    </div>
+                </form>
             </div>
         )}
 
