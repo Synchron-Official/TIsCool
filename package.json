@@ -1,5 +1,1 @@
-{
-  "dependencies": {
-    "@vercel/edge-config": "^1.4.3"
-  }
-}
+{}
