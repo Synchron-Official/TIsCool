@@ -26,7 +26,7 @@ const PeriodCard = ({ period, bell, isCurrent, isNext, routineIndex, currentMinu
             <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-zinc-200 dark:border-zinc-800"></div>
             </div>
-            <div className="relative flex justify-center text-xs uppercase tracking-widest px-4 bg-white dark:bg-zinc-950 text-zinc-400 dark:text-zinc-600">
+            <div className="relative flex justify-center text-xs uppercase tracking-widest px-4 bg-white dark:bg-zinc-950 text-zinc-500 dark:text-zinc-500">
                 {bell.bellDisplay}
             </div>
         </motion.div>
@@ -46,7 +46,7 @@ const PeriodCard = ({ period, bell, isCurrent, isNext, routineIndex, currentMinu
           relative flex items-center justify-between p-4 rounded-2xl border transition-all duration-300
           ${isCurrent 
             ? "bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 shadow-sm scale-[1.02] z-10" 
-            : "bg-white dark:bg-transparent border-transparent text-zinc-400 dark:text-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-900/50" 
+            : "bg-white dark:bg-transparent border-transparent text-zinc-600 dark:text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-900/50" 
           }
        `}>
           
@@ -61,7 +61,7 @@ const PeriodCard = ({ period, bell, isCurrent, isNext, routineIndex, currentMinu
                 flex items-center justify-center w-12 h-12 rounded-xl text-lg font-bold shrink-0
                 ${isCurrent 
                    ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-sm" 
-                   : "bg-zinc-50 dark:bg-zinc-900/50 text-zinc-400 dark:text-zinc-600"
+                   : "bg-zinc-50 dark:bg-zinc-900/50 text-zinc-500 dark:text-zinc-500"
                 }
              `}>
                 {periodLabel}

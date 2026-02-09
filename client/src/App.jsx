@@ -155,7 +155,7 @@ function App() {
   }
 
   return (
-    <div className="flex min-h-screen bg-zinc-50 dark:bg-black transition-colors duration-300">
+    <div className="flex min-h-screen bg-zinc-50 dark:bg-black text-zinc-900 dark:text-zinc-100 transition-colors duration-300">
       <Navigation currentView={currentView} setView={setCurrentView} />
 
       <main className="flex-1 overflow-x-hidden overflow-y-auto">
@@ -182,7 +182,7 @@ function App() {
                     {/* Date Controls */}
                     <div className="flex items-center justify-between bg-white dark:bg-zinc-900 p-4 rounded-2xl shadow-sm border border-zinc-100 dark:border-zinc-800">
                         <div className="flex items-center gap-2">
-                             <button onClick={prevDay} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors dark:text-zinc-400">
+                             <button onClick={prevDay} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors text-zinc-600 dark:text-zinc-400">
                                 <ChevronLeft size={20} />
                              </button>
                              <div className="flex flex-col md:flex-row md:items-baseline gap-1 md:gap-3">
@@ -193,7 +193,7 @@ function App() {
                                     {format(viewDate, 'd MMMM yyyy')}
                                 </span>
                              </div>
-                             <button onClick={nextDay} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors dark:text-zinc-400">
+                             <button onClick={nextDay} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors text-zinc-600 dark:text-zinc-400">
                                 <ChevronRight size={20} />
                              </button>
                         </div>

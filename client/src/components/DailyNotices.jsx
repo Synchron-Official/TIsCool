@@ -46,7 +46,7 @@ const DailyNotices = ({ notices }) => {
                     dangerouslySetInnerHTML={{ __html: notice.content }} 
                 />
                 
-                <div className="flex items-center justify-between text-[10px] text-zinc-400 dark:text-zinc-500 mt-3 pt-3 border-t border-zinc-100 dark:border-zinc-800/50">
+                <div className="flex items-center justify-between text-[10px] text-zinc-500 dark:text-zinc-500 mt-3 pt-3 border-t border-zinc-100 dark:border-zinc-800/50">
                     <span className="font-medium text-zinc-500 dark:text-zinc-500">{notice.authorName}</span>
                     <span className="flex items-center gap-1 opacity-70">
                         <Calendar size={10} />
