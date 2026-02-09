@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const fs = require('fs');
+const path = require('path');
 
 dotenv.config();
 
@@ -12,8 +14,30 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 app.use(cors());
 app.use(express.json());
 
-// Mock Database
-let users = [];
+// Persistent Database (JSON File) for local reliability
+const DATA_FILE = path.join(__dirname, 'users.json');
+
+const loadUsers = () => {
+    try {
+        if (fs.existsSync(DATA_FILE)) {
+            const data = fs.readFileSync(DATA_FILE, 'utf8');
+            return JSON.parse(data);
+        }
+    } catch (err) {
+        console.error("Error loading users:", err);
+    }
+    return [];
+};
+
+const saveUsers = (data) => {
+    try {
+        fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+    } catch (err) {
+        console.error("Error saving users:", err);
+    }
+};
+
+let users = loadUsers();
 
 // Authentication Middleware
 const requireAuth = (req, res, next) => {
@@ -58,6 +82,9 @@ app.post('/api/register', requireAuth, (req, res) => {
         });
     }
 
+    // Persist changes
+    saveUsers(users);
+
     console.log(`User registered/updated: ${newUser.name} (${newUser.id})`);
     res.json({ success: true, count: users.length });
 });
@@ -81,6 +108,8 @@ app.put('/api/users/:id', requireAuth, (req, res) => {
             users[userIndex][field] = updates[field];
         }
     });
+
+    saveUsers(users);
 
     res.json({ success: true, user: users[userIndex] });
 });
@@ -109,6 +138,8 @@ app.delete('/api/users/:id', requireAuth, (req, res) => {
         return res.status(404).json({ error: 'User not found' });
     }
     
+    saveUsers(users);
+
     res.json({ success: true, message: 'User deleted successfully' });
 });
 
