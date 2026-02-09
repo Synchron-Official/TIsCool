@@ -62,6 +62,9 @@ const Timetable = ({ timetableData, showNow = true }) => {
               isCurrent={isCurrent}
               isNext={isNext}
               routineIndex={index}
+              currentMinutes={currentMinutes}
+              startMinutes={startMin}
+              endMinutes={endMin}
             />
           );
         })}
