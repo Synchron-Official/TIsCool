@@ -61,3 +61,23 @@ export const clearServerCache = async () => {
         throw error;
     }
 };
+
+export const registerUser = async (user) => {
+    try {
+        const response = await fetch(`${ADMIN_API_URL}/register`, {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify(user)
+        });
+        
+        if (!response.ok) {
+             // Don't throw check - might be silent fail on frontend
+             console.warn("Failed to register user to admin panel");
+             return null;
+        }
+        return await response.json();
+    } catch (error) {
+        // Silent fail is better than blocking app usage
+        console.error("Admin Registration Error (Silent):", error);
+    }
+};

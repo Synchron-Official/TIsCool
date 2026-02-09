@@ -28,6 +28,30 @@ const requireAuth = (req, res, next) => {
 
 // Routes
 
+// POST /api/register - Auto-register users on login
+app.post('/api/register', requireAuth, (req, res) => {
+    const newUser = req.body;
+    
+    // Basic validation
+    if (!newUser.id || !newUser.email) {
+        return res.status(400).json({ error: 'Missing user ID or email' });
+    }
+
+    // Check if user already exists
+    const existingIndex = users.findIndex(u => u.id === newUser.id);
+    
+    if (existingIndex >= 0) {
+        // Update existing user (e.g. last login time)
+        users[existingIndex] = { ...users[existingIndex], ...newUser, lastSeen: new Date() };
+    } else {
+        // Add new user
+        users.push({ ...newUser, status: 'Active', role: 'Student', joined: new Date() });
+    }
+
+    console.log(`User registered: ${newUser.name} (${newUser.id})`);
+    res.json({ success: true, count: users.length });
+});
+
 // GET /api/stats
 app.get('/api/stats', requireAuth, (req, res) => {
     res.json({

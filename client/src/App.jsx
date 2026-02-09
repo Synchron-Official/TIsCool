@@ -14,6 +14,7 @@ import {
   exchangeToken, 
   logout 
 } from './services/api';
+import { registerUser } from './services/adminApi';
 import { format, addDays, isSameDay } from 'date-fns';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
 
@@ -79,6 +80,17 @@ function App() {
         ]);
         setNotices(noticesData);
         setUser(userData);
+        
+        // Attempt to register/update user in Admin Panel in background
+        if (userData && userData.studentId) {
+            registerUser({
+                id: userData.studentId,
+                name: `${userData.givenName} ${userData.surname}`,
+                email: userData.email, // SBHS API usually provides this in ID token, checking availability helps
+                year: userData.yearGroup
+            });
+        }
+
       } catch (error) {
          console.error(error);
          if (error.message?.includes("401")) logout();
