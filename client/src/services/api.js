@@ -48,7 +48,12 @@ export const exchangeToken = async (code) => {
       body: formBody
     });
 
-    if (!response.ok) throw new Error(`Token exchange failed: ${response.statusText}`);
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error("Token exchange error:", errorData);
+        throw new Error(errorData.error_description || `Token exchange failed: ${response.statusText}`);
+    }
+
     const data = await response.json();
     
     localStorage.setItem('sbhs_access_token', data.access_token);
