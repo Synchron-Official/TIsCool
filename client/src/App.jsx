@@ -120,6 +120,8 @@ function App() {
                 // Don't await this, let it happen in background
                 registerUser({
                     id: user.studentId,
+                    email: user.email,
+                    name: user.givenName ? `${user.givenName} ${user.surname}` : undefined,
                     timetable: data
                 }).catch(e => console.log("Sync failed silently", e));
             }

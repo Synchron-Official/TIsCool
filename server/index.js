@@ -1,8 +1,9 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const fs = require('fs');
-const path = require('path');
+// const fs = require('fs'); // Removed for Edge Config
+// const path = require('path'); // Removed for Edge Config
+const { createClient } = require('@vercel/edge-config');
 
 dotenv.config();
 
@@ -10,34 +11,66 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
+// Edge Config Client
+// Requires EDGE_CONFIG connection string in .env
+const edgeConfig = process.env.EDGE_CONFIG 
+    ? createClient(process.env.EDGE_CONFIG) 
+    : null;
+
 // Middleware
 app.use(cors());
 app.use(express.json());
 
-// Persistent Database (JSON File) for local reliability
-const DATA_FILE = path.join(__dirname, 'users.json');
-
-const loadUsers = () => {
+// Helper to get users from Edge Config or fallback to memory
+const getUsers = async () => {
+    if (!edgeConfig) return users; // Fallback to memory
     try {
-        if (fs.existsSync(DATA_FILE)) {
-            const data = fs.readFileSync(DATA_FILE, 'utf8');
-            return JSON.parse(data);
-        }
-    } catch (err) {
-        console.error("Error loading users:", err);
-    }
-    return [];
-};
-
-const saveUsers = (data) => {
-    try {
-        fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
-    } catch (err) {
-        console.error("Error saving users:", err);
+        const data = await edgeConfig.get('users');
+        return data || [];
+    } catch (error) {
+        console.error("Edge Config Error:", error);
+        return users;
     }
 };
 
-let users = loadUsers();
+// Helper to update users (Note: Edge Config is optimized for Reads, not High-Frequency Writes)
+const VERCEL_API_TOKEN = process.env.VERCEL_API_TOKEN;
+const EDGE_CONFIG_ID = process.env.EDGE_CONFIG_ID;
+
+const saveUsersToEdgeConfig = async (newUsers) => {
+    if (!VERCEL_API_TOKEN || !EDGE_CONFIG_ID) return;
+    
+    try {
+        await fetch(`https://api.vercel.com/v1/edge-config/${EDGE_CONFIG_ID}/items`, {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `Bearer ${VERCEL_API_TOKEN}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                items: [
+                    {
+                        operation: 'update',
+                        key: 'users',
+                        value: newUsers,
+                    },
+                ],
+            }),
+        });
+    } catch (error) {
+        console.error("Failed to update Edge Config:", error);
+    }
+};
+
+let users = []; 
+
+// Initialize local cache
+getUsers().then(data => users = Array.isArray(data) ? data : []);
+
+/* 
+ * NOTE: For permanent data storage on Vercel, you need a database (like Vercel KV or MongoDB).
+ * File-based storage (users.json) does not work in Vercel's read-only environment.
+ */
 
 // Authentication Middleware
 const requireAuth = (req, res, next) => {
@@ -87,7 +120,7 @@ app.post('/api/register', requireAuth, (req, res) => {
     }
 
     // Persist changes
-    saveUsers(users);
+    saveUsersToEdgeConfig(users); // Trigger async update
 
     console.log(`User registered/updated: ${safeUser.name} (${userId})`);
     res.json({ success: true, count: users.length });
@@ -113,7 +146,7 @@ app.put('/api/users/:id', requireAuth, (req, res) => {
         }
     });
 
-    saveUsers(users);
+    saveUsersToEdgeConfig(users);
 
     res.json({ success: true, user: users[userIndex] });
 });
@@ -142,7 +175,7 @@ app.delete('/api/users/:id', requireAuth, (req, res) => {
         return res.status(404).json({ error: 'User not found' });
     }
     
-    saveUsers(users);
+    saveUsersToEdgeConfig(users);
 
     res.json({ success: true, message: 'User deleted successfully' });
 });
