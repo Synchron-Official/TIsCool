@@ -167,6 +167,24 @@ app.get('/api/broadcast', requireAuth, (req, res) => {
     res.json(systemState.broadcast);
 });
 
+// GET /api/system/status (Public endpoint for client app)
+app.get('/api/system/status', (req, res) => {
+    res.json({
+        maintenance: systemState.maintenance,
+        broadcast: systemState.broadcast
+    });
+});
+
+// POST /api/maintenance (Toggle Maintenance Mode)
+app.post('/api/maintenance', requireAuth, (req, res) => {
+    const { maintenance } = req.body;
+    systemState.maintenance = maintenance;
+    
+    addLog('MAINTENANCE', 'ADMIN', `System maintenance mode ${maintenance ? 'ENABLED' : 'DISABLED'}`);
+    
+    res.json({ success: true, maintenance: systemState.maintenance });
+});
+
 // GET /api/users
 app.get('/api/users', requireAuth, (req, res) => {
     res.json(users);

@@ -12,11 +12,12 @@ import {
   fetchUserInfo, 
   isAuthenticated, 
   exchangeToken, 
-  logout 
+  logout,
+  fetchSystemStatus
 } from './services/api';
 import { registerUser } from './services/adminApi';
 import { format, addDays, isSameDay } from 'date-fns';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Info, AlertTriangle, XCircle, AlertOctagon } from 'lucide-react';
 
 function App() {
   // State
@@ -36,6 +37,10 @@ function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState(null);
+  
+  // System State
+  const [broadcast, setBroadcast] = useState(null);
+  const [maintenance, setMaintenance] = useState(false);
 
   // Theme Config
   useEffect(() => {
@@ -74,12 +79,18 @@ function App() {
       }
 
       try {
-        const [noticesData, userData] = await Promise.all([
+        const [noticesData, userData, systemData] = await Promise.all([
           fetchDailyNews(),
-          fetchUserInfo()
+          fetchUserInfo(),
+          fetchSystemStatus()
         ]);
         setNotices(noticesData);
         setUser(userData);
+        
+        if (systemData) {
+            setBroadcast(systemData.broadcast);
+            setMaintenance(systemData.maintenance);
+        }
         
         // Attempt to register/update user in Admin Panel in background
         if (userData && userData.studentId) {
@@ -132,7 +143,24 @@ function App() {
     };
     loadTimetable();
   }, [viewDate, user]); 
+maintenance && currentView !== 'admin') {
+      return (
+        <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center p-8 text-center">
+            <div className="bg-red-900/20 p-6 rounded-full border border-red-500/20 mb-6 animate-pulse">
+                <AlertOctagon size={64} className="text-red-500" />
+            </div>
+            <h1 className="text-3xl font-bold text-white mb-2">System Maintenance</h1>
+            <p className="text-zinc-400 max-w-md">The SBHS Timetable application is currently undergoing scheduled maintenance. Please check back later.</p>
+            {user?.studentId === '449130511' && (
+                <button onClick={() => setCurrentView('admin')} className="mt-8 text-xs text-zinc-600 hover:text-white underline">
+                    Admin Bypass
+                </button>
+            )}
+        </div>
+      );
+  }
 
+  if (
   // Date Navigation Helpers
   const nextDay = () => setViewDate(d => addDays(d, 1));
   const prevDay = () => setViewDate(d => addDays(d, -1));
@@ -176,6 +204,16 @@ function App() {
                <ThemeToggle isDark={theme === 'dark'} toggleTheme={toggleTheme} />
             </div>
          </header>
+         
+         {broadcast && (
+            <div className={`mx-4 md:mx-8 mt-6 -mb-2 px-4 py-3 rounded-xl flex items-center gap-3 text-sm font-medium border
+                ${broadcast.type === 'error' ? 'bg-red-500/10 text-red-600 border-red-500/20 dark:bg-red-500/20 dark:text-red-400' : 
+                  broadcast.type === 'warning' ? 'bg-orange-500/10 text-orange-600 border-orange-500/20 dark:bg-orange-500/20 dark:text-orange-400' : 
+                  'bg-blue-500/10 text-blue-600 border-blue-500/20 dark:bg-blue-500/20 dark:text-blue-400'}`}>
+                <Info size={18} className="shrink-0" />
+                <span>{broadcast.message}</span>
+            </div>
+         )}
 
          <div className="p-4 md:p-8 max-w-7xl mx-auto">
             

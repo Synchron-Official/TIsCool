@@ -127,3 +127,16 @@ export const fetchDateInfo = async (date) => {
     const dateStr = date ? format(date, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd');
     return fetchWithAuth(`/calendar/days.json?from=${dateStr}&to=${dateStr}`);
 };
+
+// --- System API (Public) ---
+const SYSTEM_API_URL = import.meta.env.VITE_ADMIN_API_URL || 'https://timetable-sbhs-server.vercel.app/api';
+
+export const fetchSystemStatus = async () => {
+    try {
+        const response = await fetch(`${SYSTEM_API_URL}/system/status`);
+        if (!response.ok) return null;
+        return await response.json();
+    } catch {
+        return null;
+    }
+};

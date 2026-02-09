@@ -105,6 +105,21 @@ export const setBroadcast = async (message, type = 'info') => {
     }
 };
 
+export const setMaintenanceMode = async (enabled) => {
+    try {
+        const response = await fetch(`${ADMIN_API_URL}/maintenance`, {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify({ maintenance: enabled })
+        });
+        if (!response.ok) throw new Error('Failed to toggle maintenance');
+        return await response.json();
+    } catch (error) {
+        console.error("Admin API Error:", error);
+        throw error;
+    }
+};
+
 export const registerUser = async (user) => {
     try {
         const response = await fetch(`${ADMIN_API_URL}/register`, {

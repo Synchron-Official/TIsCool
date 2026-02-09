@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Lock, ShieldCheck, AlertCircle, Users, Activity, Settings, Search, MoreVertical, RefreshCw, Trash2, Eye, Edit2, X, Terminal, Radio, MessageSquare, Zap } from 'lucide-react';
-import { fetchUsers, fetchAdminStats, deleteUser, clearServerCache, updateUser, fetchLogs, setBroadcast } from '../services/adminApi';
+import { fetchUsers, fetchAdminStats, deleteUser, clearServerCache, updateUser, fetchLogs, setBroadcast, setMaintenanceMode } from '../services/adminApi';
 import Timetable from './Timetable';
 
 const AdminPanel = ({ user }) => {
@@ -19,6 +19,17 @@ const AdminPanel = ({ user }) => {
   // Broadcast State
   const [broadcastMsg, setBroadcastMsg] = useState('');
   const [broadcastType, setBroadcastType] = useState('info');
+
+  const handleToggleMaintenance = async () => {
+       try {
+           const newStatus = !stats?.systemStatus?.includes('Maintenance');
+           await setMaintenanceMode(newStatus);
+           loadData(); // Refresh stats
+           alert(`Maintenance mode ${newStatus ? 'ENABLED' : 'DISABLED'}`);
+       } catch (e) {
+           alert("Failed to toggle maintenance mode");
+       }
+  };
 
   // UI States
   const [activeTab, setActiveTab] = useState('overview');
@@ -204,7 +215,9 @@ const AdminPanel = ({ user }) => {
                                 {loading ? '...' : (stats?.totalUsers || users.length || 0)}
                             </h3>
                             <div className="text-xs text-green-600 mt-2 flex items-center gap-1">
-                                <Zap size={10} fill="currentColor" /> Active Count
+                                <Zap size={`text-3xl font-bold mt-1 ${
+                                stats?.systemStatus === 'Maintenance' ? 'text-red-500' : 'text-green-600'
+                            }`}
                             </div>
                         </div>
                     </div>
@@ -457,6 +470,22 @@ const AdminPanel = ({ user }) => {
                                     </td>
                                 </tr>
                             ))}
+                     <div className="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-950 rounded-xl border border-zinc-200 dark:border-zinc-800">
+                        <div>
+                            <h4 className="text-sm font-medium text-zinc-900 dark:text-white">Maintenance Mode</h4>
+                            <p className="text-xs text-zinc-500 mt-1">Block all non-admin access to the application</p>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                            <input 
+                                type="checkbox" 
+                                checked={stats?.systemStatus === 'Maintenance'}
+                                onChange={handleToggleMaintenance}
+                                className="sr-only peer" 
+                            />
+                            <div className="w-11 h-6 bg-zinc-200 rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-zinc-600 peer-checked:bg-red-600"></div>
+                        </label>
+                    </div>
+
                         </tbody>
                     </table>
                 </div>
