@@ -18,7 +18,25 @@ const edgeConfig = process.env.EDGE_CONFIG
     : null;
 
 // Middleware
-app.use(cors());
+const allowedOrigins = ['https://www.synchron.work', 'http://localhost:5173', 'http://localhost:3000'];
+
+app.use(cors({
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.indexOf(origin) === -1) {
+            // For debugging, you might want to log the blocked origin
+            console.log('Blocked Origin:', origin);
+            // Optionally allow it anyway for now to fix the blockage
+            // return callback(null, true);
+        }
+        return callback(null, true);
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Admin-Token']
+}));
+
 app.use(express.json());
 
 // Helper to get users from Edge Config or fallback to memory
@@ -199,4 +217,5 @@ if (require.main === module) {
     });
 }
 
+// Export the app for Vercel
 module.exports = app;
