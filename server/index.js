@@ -42,14 +42,47 @@ app.post('/api/register', requireAuth, (req, res) => {
     
     if (existingIndex >= 0) {
         // Update existing user (e.g. last login time)
-        users[existingIndex] = { ...users[existingIndex], ...newUser, lastSeen: new Date() };
+        users[existingIndex] = { 
+            ...users[existingIndex], 
+            ...newUser, 
+            lastSeen: new Date() 
+        };
     } else {
         // Add new user
-        users.push({ ...newUser, status: 'Active', role: 'Student', joined: new Date() });
+        users.push({ 
+            ...newUser, 
+            status: 'Active', 
+            role: 'Student', 
+            joined: new Date(),
+            timetable: newUser.timetable || null
+        });
     }
 
-    console.log(`User registered: ${newUser.name} (${newUser.id})`);
+    console.log(`User registered/updated: ${newUser.name} (${newUser.id})`);
     res.json({ success: true, count: users.length });
+});
+
+// PUT /api/users/:id - Update user details (Role/Status)
+app.put('/api/users/:id', requireAuth, (req, res) => {
+    const { id } = req.params;
+    const updates = req.body;
+    
+    // Find user
+    const userIndex = users.findIndex(u => u.id === id);
+    if (userIndex === -1) {
+        return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Apply updates - whitelist allowed fields for safety
+    const allowedUpdates = ['role', 'status', 'name', 'year'];
+    
+    allowedUpdates.forEach(field => {
+        if (updates[field] !== undefined) {
+            users[userIndex][field] = updates[field];
+        }
+    });
+
+    res.json({ success: true, user: users[userIndex] });
 });
 
 // GET /api/stats

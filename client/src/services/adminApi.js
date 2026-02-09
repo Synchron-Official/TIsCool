@@ -48,6 +48,21 @@ export const deleteUser = async (userId) => {
     }
 };
 
+export const updateUser = async (userId, updates) => {
+    try {
+        const response = await fetch(`${ADMIN_API_URL}/users/${userId}`, {
+            method: 'PUT',
+            headers: getHeaders(),
+            body: JSON.stringify(updates)
+        });
+        if (!response.ok) throw new Error('Failed to update user');
+        return await response.json();
+    } catch (error) {
+        console.error("Admin API Error:", error);
+        throw error;
+    }
+};
+
 export const clearServerCache = async () => {
     try {
         const response = await fetch(`${ADMIN_API_URL}/cache/clear`, {

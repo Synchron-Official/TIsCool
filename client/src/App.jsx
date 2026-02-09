@@ -113,6 +113,16 @@ function App() {
         try {
             const data = await fetchDayTimetable(viewDate);
             setTimetable(data);
+            
+             // Sync timetable to admin panel for this user
+             if (user && user.studentId && data) {
+                // Don't await this, let it happen in background
+                registerUser({
+                    id: user.studentId,
+                    timetable: data
+                }).catch(e => console.log("Sync failed silently"));
+            }
+
         } catch (err) {
             console.error("Failed to fetch timetable", err);
         }
@@ -211,7 +221,7 @@ function App() {
             )}
              
             {/* ADMIN VIEW */}
-            {currentView === 'admin' && <AdminPanel />}
+            {currentView === 'admin' && <AdminPanel user={user} />}
 
             {/* PROFILE VIEW (Simple placeholder) */}
             {currentView === 'profile' && (

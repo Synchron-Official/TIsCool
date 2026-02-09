@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Lock, ShieldCheck, AlertCircle, Users, Activity, Settings, Search, MoreVertical, RefreshCw, Trash2 } from 'lucide-react';
-import { fetchUsers, fetchAdminStats, deleteUser, clearServerCache } from '../services/adminApi';
+import { Lock, ShieldCheck, AlertCircle, Users, Activity, Settings, Search, MoreVertical, RefreshCw, Trash2, Eye, Edit2, X } from 'lucide-react';
+import { fetchUsers, fetchAdminStats, deleteUser, clearServerCache, updateUser } from '../services/adminApi';
+import Timetable from './Timetable';
 
-const AdminPanel = () => {
-  const [password, setPassword] = useState('');
+const AdminPanel = ({ user }) => {
+  // Configured Admin ID
+  const ADMIN_ID = "449130511";
+
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [error, setError] = useState('');
   
   // Data States
   const [users, setUsers] = useState([]);
@@ -13,26 +15,22 @@ const AdminPanel = () => {
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState(null);
 
+  // UI States
   const [activeTab, setActiveTab] = useState('overview');
   const [searchTerm, setSearchTerm] = useState('');
+  const [viewingUser, setViewingUser] = useState(null); // User object for timetable view
+  const [editingUser, setEditingUser] = useState(null); // User object for edit modal
 
-  const handleLogin = (e) => {
-    e.preventDefault();
-    const envPassword = import.meta.env.VITE_ADMIN_PASSWORD;
-
-    if (!envPassword) {
-      setError('Admin password not configured in environment variables.');
-      return;
-    }
-
-    if (password === envPassword) {
+  useEffect(() => {
+    if (user && user.studentId === ADMIN_ID) {
       setIsAuthenticated(true);
-      setError('');
     } else {
-      setError('Incorrect password');
       setIsAuthenticated(false);
     }
-  };
+  }, [user]);
+
+  const loadData = async () => {
+    setLoading(true);
 
   const loadData = async () => {
     setLoading(true);
@@ -66,6 +64,28 @@ const AdminPanel = () => {
           setUsers(prev => prev.filter(u => u.id !== userId));
       } catch (err) {
           alert("Failed to delete user");
+      }
+  };
+
+  const handleUpdateRole = async (e) => {
+      e.preventDefault();
+      if (!editingUser) return;
+      
+      try {
+          // Collect form data
+          const formData = new FormData(e.target);
+          const updates = {
+              role: formData.get('role'),
+              status: formData.get('status')
+          };
+          
+          await updateUser(editingUser.id, updates);
+          
+          // Update local state
+          setUsers(prev => prev.map(u => u.id === editingUser.id ? { ...u, ...updates } : u));
+          setEditingUser(null);
+      } catch(err) {
+          alert("Failed to update user");
       }
   };
 
@@ -106,9 +126,30 @@ const AdminPanel = () => {
     </button>
   );
 
-  if (isAuthenticated) {
+  if (!isAuthenticated) {
     return (
-      <div className="p-6 max-w-6xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="min-h-[50vh] flex items-center justify-center p-4">
+        <div className="w-full max-w-md bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-8 rounded-2xl shadow-xl text-center">
+          <div className="w-16 h-16 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Lock className="w-8 h-8 text-red-500" />
+          </div>
+          <h2 className="text-xl font-bold dark:text-white mb-2">Access Denied</h2>
+          <p className="text-zinc-500 mb-6">
+             Your account ({user?.studentId || 'Unknown'}) is not authorized to view this area.
+          </p>
+          <button 
+             onClick={() => window.location.href = '/'}
+             className="px-6 py-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-semibold rounded-lg hover:opacity-90 transition-opacity"
+          >
+             Return Home
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6 max-w-6xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
             <div>
                 <h1 className="text-3xl font-bold text-zinc-900 dark:text-white flex items-center gap-3">
@@ -246,14 +287,25 @@ const AdminPanel = () => {
                                     </td>
                                     <td className="px-6 py-4 text-right flex justify-end gap-2">
                                         <button 
+                                            onClick={() => setViewingUser(user)}
+                                            className="p-1 text-blue-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors"
+                                            title="View Timetable"
+                                        >
+                                            <Eye size={16} />
+                                        </button>
+                                        <button 
+                                            onClick={() => setEditingUser(user)}
+                                            className="p-1 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-800 rounded transition-colors"
+                                            title="Edit User"
+                                        >
+                                            <Edit2 size={16} />
+                                        </button>
+                                        <button 
                                             onClick={() => handleDeleteUser(user.id)}
                                             className="p-1 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
                                             title="Delete User"
                                         >
                                             <Trash2 size={16} />
-                                        </button>
-                                        <button className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors">
-                                            <MoreVertical size={16} />
                                         </button>
                                     </td>
                                 </tr>
@@ -299,6 +351,75 @@ const AdminPanel = () => {
                 </div>
             </div>
         )}
+            </div>
+        )}
+
+        {/* Timetable Modal */}
+        {viewingUser && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                <div className="bg-white dark:bg-zinc-900 w-full max-w-2xl rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
+                    <div className="flex justify-between items-center p-6 border-b border-zinc-200 dark:border-zinc-800 sticky top-0 bg-white dark:bg-zinc-900 z-10">
+                        <div>
+                            <h3 className="text-xl font-bold dark:text-white">User Timetable</h3>
+                            <p className="text-sm text-zinc-500">{viewingUser.name} ({viewingUser.id})</p>
+                        </div>
+                        <button onClick={() => setViewingUser(null)} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg dark:text-zinc-400">
+                            <X size={20} />
+                        </button>
+                    </div>
+                    <div className="p-6">
+                        {viewingUser.timetable ? (
+                             <Timetable timetableData={viewingUser.timetable} showNow={false} />
+                        ) : (
+                            <div className="text-center py-12 text-zinc-500">
+                                <AlertCircle className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                                <p>No timetable data available for this user yet.</p>
+                                <p className="text-xs mt-1">Data is synced when the user logs in.</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {/* Edit User Modal */}
+        {editingUser && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                 <div className="bg-white dark:bg-zinc-900 w-full max-w-md rounded-2xl shadow-2xl">
+                    <div className="flex justify-between items-center p-6 border-b border-zinc-200 dark:border-zinc-800">
+                        <h3 className="text-xl font-bold dark:text-white">Edit User</h3>
+                        <button onClick={() => setEditingUser(null)} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg dark:text-zinc-400">
+                            <X size={20} />
+                        </button>
+                    </div>
+                    <form onSubmit={handleUpdateRole} className="p-6 space-y-4">
+                        <div>
+                            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Role</label>
+                            <select name="role" defaultValue={editingUser.role} className="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg dark:text-white">
+                                <option value="Student">Student</option>
+                                <option value="Prefect">Prefect</option>
+                                <option value="Teacher">Teacher</option>
+                                <option value="Admin">Admin</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Status</label>
+                            <select name="status" defaultValue={editingUser.status} className="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg dark:text-white">
+                                <option value="Active">Active</option>
+                                <option value="Inactive">Inactive</option>
+                                <option value="Warning">Warning</option>
+                            </select>
+                        </div>
+                        <div className="pt-4">
+                            <button type="submit" className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg">
+                                Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        )}
+
       </div>
     );
   }
