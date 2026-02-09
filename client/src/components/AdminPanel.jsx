@@ -1,0 +1,348 @@
+import React, { useState, useEffect } from 'react';
+import { Lock, ShieldCheck, AlertCircle, Users, Activity, Settings, Search, MoreVertical, RefreshCw, Trash2 } from 'lucide-react';
+import { fetchUsers, fetchAdminStats, deleteUser, clearServerCache } from '../services/adminApi';
+
+const AdminPanel = () => {
+  const [password, setPassword] = useState('');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [error, setError] = useState('');
+  
+  // Data States
+  const [users, setUsers] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [apiError, setApiError] = useState(null);
+
+  const [activeTab, setActiveTab] = useState('overview');
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+    const envPassword = import.meta.env.VITE_ADMIN_PASSWORD;
+
+    if (!envPassword) {
+      setError('Admin password not configured in environment variables.');
+      return;
+    }
+
+    if (password === envPassword) {
+      setIsAuthenticated(true);
+      setError('');
+    } else {
+      setError('Incorrect password');
+      setIsAuthenticated(false);
+    }
+  };
+
+  const loadData = async () => {
+    setLoading(true);
+    setApiError(null);
+    try {
+        const [usersData, statsData] = await Promise.all([
+            fetchUsers(),
+            fetchAdminStats()
+        ]);
+        setUsers(usersData);
+        setStats(statsData);
+    } catch (err) {
+        setApiError('Failed to fetch data from server. Ensure backend is running.');
+        console.error(err);
+    } finally {
+        setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+        loadData();
+    }
+  }, [isAuthenticated]);
+
+  const handleDeleteUser = async (userId) => {
+      if(!window.confirm("Are you sure you want to delete this user?")) return;
+      
+      try {
+          await deleteUser(userId);
+          setUsers(prev => prev.filter(u => u.id !== userId));
+      } catch (err) {
+          alert("Failed to delete user");
+      }
+  };
+
+  const handleClearLocalCache = () => {
+      // Clear everything except admin session
+      const adminAuth = sessionStorage.getItem('sbhs_auth_state'); 
+      localStorage.clear();
+      if(adminAuth) sessionStorage.setItem('sbhs_auth_state', adminAuth);
+      alert("Local cache cleared.");
+  };
+
+  const handleClearServerCache = async () => {
+      try {
+          await clearServerCache();
+          alert("Server cache cleared.");
+      } catch (err) {
+          alert("Failed to clear server cache.");
+      }
+  };
+
+
+  const filteredUsers = users.filter(user => 
+    user.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    user.email?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const TabButton = ({ id, label, icon: Icon }) => (
+    <button
+        onClick={() => setActiveTab(id)}
+        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors
+        ${activeTab === id 
+            ? 'bg-blue-600 text-white' 
+            : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+        }`}
+    >
+        <Icon size={18} />
+        {label}
+    </button>
+  );
+
+  if (isAuthenticated) {
+    return (
+      <div className="p-6 max-w-6xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+            <div>
+                <h1 className="text-3xl font-bold text-zinc-900 dark:text-white flex items-center gap-3">
+                    <ShieldCheck className="w-8 h-8 text-green-500" />
+                    Admin Dashboard
+                </h1>
+                <p className="text-zinc-500 dark:text-zinc-400 mt-2">
+                    Manage users and system settings
+                </p>
+                {apiError && (
+                    <div className="flex items-center gap-2 mt-4 text-red-600 bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-200 dark:border-red-800">
+                        <AlertCircle size={16} />
+                        <span className="text-sm">{apiError}</span>
+                    </div>
+                )}
+            </div>
+            
+            <div className="flex bg-white dark:bg-zinc-900 p-1 rounded-xl border border-zinc-200 dark:border-zinc-800 self-start md:self-auto">
+                <TabButton id="overview" label="Overview" icon={Activity} />
+                <TabButton id="users" label="Users" icon={Users} />
+                <TabButton id="settings" label="Settings" icon={Settings} />
+            </div>
+        </header>
+
+        {activeTab === 'overview' && (
+            <div className="grid gap-6 md:grid-cols-3">
+                <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <p className="text-sm font-medium text-zinc-500">Total Users</p>
+                            <h3 className="text-3xl font-bold text-zinc-900 dark:text-white mt-2">
+                                {loading ? '...' : (stats?.totalUsers || users.length || 0)}
+                            </h3>
+                        </div>
+                        <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl text-blue-600">
+                            <Users size={24} />
+                        </div>
+                    </div>
+                </div>
+                <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+                    <div className="flex justify-between items-start">
+                         <div>
+                            <p className="text-sm font-medium text-zinc-500">System Status</p>
+                            <h3 className="text-3xl font-bold text-green-600 mt-2">
+                                {loading ? '...' : (stats?.systemStatus || 'Operational')}
+                            </h3>
+                        </div>
+                        <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-xl text-green-600">
+                            <Activity size={24} />
+                        </div>
+                    </div>
+                </div>
+                <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+                    <div className="flex justify-between items-start">
+                         <div>
+                            <p className="text-sm font-medium text-zinc-500">Environment</p>
+                            <h3 className="text-3xl font-bold text-zinc-900 dark:text-white mt-2 capitalize">{import.meta.env.MODE}</h3>
+                        </div>
+                        <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-xl text-purple-600">
+                            <Settings size={24} />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {activeTab === 'users' && (
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm overflow-hidden">
+                <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center bg-zinc-50/50 dark:bg-zinc-900/50">
+                    <h3 className="font-semibold text-zinc-900 dark:text-white">User Management</h3>
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                        <input 
+                            type="text" 
+                            placeholder="Search users..." 
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="pl-9 pr-4 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+                </div>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm">
+                        <thead className="bg-zinc-50 dark:bg-zinc-950 text-zinc-500 font-medium">
+                            <tr>
+                                <th className="px-6 py-4">Name</th>
+                                <th className="px-6 py-4">ID</th>
+                                <th className="px-6 py-4">Role</th>
+                                <th className="px-6 py-4">Year</th>
+                                <th className="px-6 py-4">Status</th>
+                                <th className="px-6 py-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
+                            {loading ? (
+                                <tr>
+                                    <td colSpan="6" className="px-6 py-8 text-center text-zinc-500">
+                                        <div className="flex items-center justify-center gap-2">
+                                            <RefreshCw className="animate-spin w-4 h-4" />
+                                            Loading users...
+                                        </div>
+                                    </td>
+                                </tr>
+                            ) : filteredUsers.length === 0 ? (
+                                <tr>
+                                     <td colSpan="6" className="px-6 py-8 text-center text-zinc-500">
+                                        No users found.
+                                     </td>
+                                </tr>
+                            ) : filteredUsers.map((user) => (
+                                <tr key={user.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
+                                    <td className="px-6 py-4">
+                                        <div>
+                                            <div className="font-medium text-zinc-900 dark:text-white">{user.name}</div>
+                                            <div className="text-zinc-500 text-xs">{user.email}</div>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 text-zinc-600 dark:text-zinc-400 font-mono text-xs">{user.id}</td>
+                                    <td className="px-6 py-4">
+                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                            ${user.role === 'Prefect' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' :
+                                              user.role === 'Teacher' ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300' :
+                                              'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'}`}>
+                                            {user.role}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4 text-zinc-600 dark:text-zinc-400">{user.year}</td>
+                                    <td className="px-6 py-4">
+                                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border
+                                            ${user.status === 'Active' ? 'bg-green-50 border-green-200 text-green-700 dark:bg-green-900/10 dark:border-green-800 dark:text-green-400' :
+                                              'bg-zinc-50 border-zinc-200 text-zinc-600 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-400'}`}>
+                                            <span className={`w-1.5 h-1.5 rounded-full ${user.status === 'Active' ? 'bg-green-500' : 'bg-zinc-400'}`}></span>
+                                            {user.status}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4 text-right flex justify-end gap-2">
+                                        <button 
+                                            onClick={() => handleDeleteUser(user.id)}
+                                            className="p-1 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                                            title="Delete User"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                        <button className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors">
+                                            <MoreVertical size={16} />
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        )}
+
+        {activeTab === 'settings' && (
+             <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 rounded-2xl shadow-sm">
+                <h3 className="text-lg font-semibold dark:text-white mb-4">Admin Controls</h3>
+                <p className="text-zinc-500 text-sm mb-6">
+                    Perform system maintenance tasks.
+                </p>
+                <div className="space-y-4">
+                    <div className="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-950 rounded-xl border border-zinc-200 dark:border-zinc-800">
+                        <div>
+                            <h4 className="text-sm font-medium text-zinc-900 dark:text-white">Clear Application Cache (Local)</h4>
+                            <p className="text-xs text-zinc-500 mt-1">Removes all local storage data/tokens except your admin session</p>
+                        </div>
+                         <button 
+                            onClick={handleClearLocalCache}
+                            className="px-4 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white rounded-lg transition-colors text-sm font-medium shadow-sm"
+                        >
+                            Clear Local Cache
+                        </button>
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-950 rounded-xl border border-zinc-200 dark:border-zinc-800">
+                        <div>
+                            <h4 className="text-sm font-medium text-zinc-900 dark:text-white">Clear Server Cache</h4>
+                            <p className="text-xs text-zinc-500 mt-1">Force invalidation of API cache at synchron.work</p>
+                        </div>
+                         <button 
+                            onClick={handleClearServerCache}
+                            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors text-sm font-medium shadow-sm"
+                        >
+                            Clear Server Cache
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-[50vh] flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-8 rounded-2xl shadow-xl">
+        <div className="flex flex-col items-center mb-6">
+            <div className="w-12 h-12 bg-zinc-100 dark:bg-zinc-800 rounded-full flex items-center justify-center mb-4">
+                <Lock className="w-6 h-6 text-zinc-500 dark:text-zinc-400" />
+            </div>
+            <h2 className="text-xl font-bold dark:text-white">Admin Access</h2>
+            <p className="text-sm text-zinc-500 text-center mt-1">Please enter the password to continue</p>
+        </div>
+
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter admin password"
+              className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white transition-all"
+              autoFocus
+            />
+          </div>
+          
+          {error && (
+            <div className="flex items-center gap-2 text-red-500 text-sm p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                <AlertCircle size={16} />
+                {error}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            className="w-full py-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-semibold rounded-xl hover:opacity-90 transition-opacity"
+          >
+            Unlock Panel
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default AdminPanel;

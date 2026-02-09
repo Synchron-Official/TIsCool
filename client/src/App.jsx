@@ -4,6 +4,7 @@ import ThemeToggle from './components/ThemeToggle';
 import Timetable from './components/Timetable';
 import CalendarView from './components/CalendarView';
 import DailyNotices from './components/DailyNotices';
+import AdminPanel from './components/AdminPanel';
 import LandingPage from './components/LandingPage';
 import { 
   fetchDayTimetable, 
@@ -190,6 +191,9 @@ function App() {
                 </div>
             )}
              
+            {/* ADMIN VIEW */}
+            {currentView === 'admin' && <AdminPanel />}
+
             {/* PROFILE VIEW (Simple placeholder) */}
             {currentView === 'profile' && (
                 <div className="max-w-md mx-auto bg-white dark:bg-zinc-900 p-8 rounded-3xl border border-zinc-200 dark:border-zinc-800 text-center space-y-6 mt-10">
