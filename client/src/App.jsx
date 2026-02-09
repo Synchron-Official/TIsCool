@@ -116,11 +116,12 @@ function App() {
             
              // Sync timetable to admin panel for this user
              if (user && user.studentId && data) {
+                console.log("Syncing timetable to admin:", user.studentId, data);
                 // Don't await this, let it happen in background
                 registerUser({
                     id: user.studentId,
                     timetable: data
-                }).catch(e => console.log("Sync failed silently"));
+                }).catch(e => console.log("Sync failed silently", e));
             }
 
         } catch (err) {

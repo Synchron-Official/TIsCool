@@ -48,6 +48,9 @@ const AdminPanel = ({ user }) => {
     }
   };
 
+  // Determine the user object for the modal based on latest data
+  const viewingUserEntry = viewingUserId ? users.find(u => u.id === viewingUserId) : null;
+
   useEffect(() => {
     if (isAuthenticated) {
         loadData();
@@ -285,7 +288,7 @@ const AdminPanel = ({ user }) => {
                                     </td>
                                     <td className="px-6 py-4 text-right flex justify-end gap-2">
                                         <button 
-                                            onClick={() => setViewingUser(user)}
+                                            onClick={() => setViewingUserId(user.id)}
                                             className="p-1 text-blue-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors"
                                             title="View Timetable"
                                         >
@@ -351,26 +354,29 @@ const AdminPanel = ({ user }) => {
         )}
 
         {/* Timetable Modal */}
-        {viewingUser && (
+        {viewingUserEntry && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
                 <div className="bg-white dark:bg-zinc-900 w-full max-w-2xl rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
                     <div className="flex justify-between items-center p-6 border-b border-zinc-200 dark:border-zinc-800 sticky top-0 bg-white dark:bg-zinc-900 z-10">
                         <div>
                             <h3 className="text-xl font-bold dark:text-white">User Timetable</h3>
-                            <p className="text-sm text-zinc-500">{viewingUser.name} ({viewingUser.id})</p>
+                            <p className="text-sm text-zinc-500">{viewingUserEntry.name} ({viewingUserEntry.id})</p>
                         </div>
-                        <button onClick={() => setViewingUser(null)} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg dark:text-zinc-400">
+                        <button onClick={() => setViewingUserId(null)} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg dark:text-zinc-400">
                             <X size={20} />
                         </button>
                     </div>
                     <div className="p-6">
-                        {viewingUser.timetable ? (
-                             <Timetable timetableData={viewingUser.timetable} showNow={false} />
+                        {viewingUserEntry.timetable ? (
+                             <Timetable timetableData={viewingUserEntry.timetable} showNow={false} />
                         ) : (
                             <div className="text-center py-12 text-zinc-500">
                                 <AlertCircle className="w-12 h-12 mx-auto mb-3 opacity-20" />
                                 <p>No timetable data available for this user yet.</p>
                                 <p className="text-xs mt-1">Data is synced when the user logs in.</p>
+                                <pre className="text-[10px] mt-4 text-zinc-300 overflow-x-auto max-w-sm mx-auto">
+                                    Debug: {JSON.stringify(viewingUserEntry.timetable, null, 2)}
+                                </pre>
                             </div>
                         )}
                     </div>

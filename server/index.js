@@ -61,37 +61,41 @@ app.post('/api/register', requireAuth, (req, res) => {
         return res.status(400).json({ error: 'Missing user ID or email' });
     }
 
+    // Normalize ID to string to prevent duplicates
+    const userId = String(newUser.id);
+    const safeUser = { ...newUser, id: userId };
+
     // Check if user already exists
-    const existingIndex = users.findIndex(u => u.id === newUser.id);
+    const existingIndex = users.findIndex(u => String(u.id) === userId);
     
     if (existingIndex >= 0) {
         // Update existing user (e.g. last login time)
         users[existingIndex] = { 
             ...users[existingIndex], 
-            ...newUser, 
+            ...safeUser, 
             lastSeen: new Date() 
         };
     } else {
         // Add new user
         users.push({ 
-            ...newUser, 
+            ...safeUser, 
             status: 'Active', 
             role: 'Student', 
             joined: new Date(),
-            timetable: newUser.timetable || null
+            timetable: safeUser.timetable || null
         });
     }
 
     // Persist changes
     saveUsers(users);
 
-    console.log(`User registered/updated: ${newUser.name} (${newUser.id})`);
+    console.log(`User registered/updated: ${safeUser.name} (${userId})`);
     res.json({ success: true, count: users.length });
 });
 
 // PUT /api/users/:id - Update user details (Role/Status)
 app.put('/api/users/:id', requireAuth, (req, res) => {
-    const { id } = req.params;
+    const { id } = req.params;String(u.id) === String(id)
     const updates = req.body;
     
     // Find user
@@ -132,7 +136,7 @@ app.get('/api/users', requireAuth, (req, res) => {
 app.delete('/api/users/:id', requireAuth, (req, res) => {
     const { id } = req.params;
     const initialLength = users.length;
-    users = users.filter(user => user.id !== id);
+    users = users.filter(user => String(user.id) !== String(id));
     
     if (users.length === initialLength) {
         return res.status(404).json({ error: 'User not found' });
