@@ -424,46 +424,5 @@ const AdminPanel = ({ user }) => {
     );
   }
 
-  return (
-    <div className="min-h-[50vh] flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-8 rounded-2xl shadow-xl">
-        <div className="flex flex-col items-center mb-6">
-            <div className="w-12 h-12 bg-zinc-100 dark:bg-zinc-800 rounded-full flex items-center justify-center mb-4">
-                <Lock className="w-6 h-6 text-zinc-500 dark:text-zinc-400" />
-            </div>
-            <h2 className="text-xl font-bold dark:text-white">Admin Access</h2>
-            <p className="text-sm text-zinc-500 text-center mt-1">Please enter the password to continue</p>
-        </div>
-
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter admin password"
-              className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white transition-all"
-              autoFocus
-            />
-          </div>
-          
-          {error && (
-            <div className="flex items-center gap-2 text-red-500 text-sm p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                <AlertCircle size={16} />
-                {error}
-            </div>
-          )}
-
-          <button
-            type="submit"
-            className="w-full py-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-semibold rounded-xl hover:opacity-90 transition-opacity"
-          >
-            Unlock Panel
-          </button>
-        </form>
-      </div>
-    </div>
-  );
-};
 
 export default AdminPanel;
