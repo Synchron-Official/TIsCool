@@ -18,7 +18,7 @@ const AdminPanel = ({ user }) => {
   // UI States
   const [activeTab, setActiveTab] = useState('overview');
   const [searchTerm, setSearchTerm] = useState('');
-  const [viewingUser, setViewingUser] = useState(null); // User object for timetable view
+  const [viewingUserId, setViewingUserId] = useState(null); // ID only, derive user from list
   const [editingUser, setEditingUser] = useState(null); // User object for edit modal
 
   useEffect(() => {
