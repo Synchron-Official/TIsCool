@@ -1,127 +1,122 @@
-﻿import React, { useState } from 'react';
-import { MapPin, User as UserIcon, Coffee, Utensils } from 'lucide-react';
+﻿import React from 'react';
+import { MapPin, User as UserIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const PeriodCard = ({ period, bell, isCurrent, isNext, routineIndex, currentMinutes, startMinutes, endMinutes }) => {
   const { title, room, fullTeacher } = period;
   const { time, endTime } = bell;
-  const [partyMode, setPartyMode] = useState(false);
 
-  // Calculate Progress
+  // Progress logic
   const progress = isCurrent && startMinutes && endMinutes 
       ? Math.min(100, Math.max(0, ((currentMinutes - startMinutes) / (endMinutes - startMinutes)) * 100))
       : 0;
+  
+  // Format period label
+  const periodLabel = bell.bell;
 
-  // Recess/Lunch Break Cards - Minimalist Text Only (No Box)
+  // Variant for Breaks: "Divider" style
   if (bell.bell === "R" || bell.bell === "L") {
-     const Icon = bell.bell === "R" ? Coffee : Utensils;
      return (
         <motion.div 
            initial={{ opacity: 0 }}
            animate={{ opacity: 1 }}
            transition={{ delay: routineIndex * 0.05 }}
-           className={`flex items-center justify-center gap-3 py-2 text-xs uppercase tracking-widest select-none ${
-             isCurrent 
-               ? "text-blue-500 font-bold" 
-               : "text-zinc-400 dark:text-zinc-600"
-           }`}
+           className="relative flex items-center justify-center py-6"
         >
-             <Icon size={14} className="opacity-80" />
-             <span>{bell.bellDisplay}</span>
-             <span className="opacity-20">•</span>
-             <span className="font-mono opacity-60">{time} - {endTime}</span>
+            <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-zinc-200 dark:border-zinc-800"></div>
+            </div>
+            <div className="relative flex justify-center text-xs uppercase tracking-widest px-4 bg-white dark:bg-zinc-950 text-zinc-400 dark:text-zinc-600">
+                {bell.bellDisplay}
+            </div>
         </motion.div>
      );
   }
 
-  // Class Period Cards - Compact Design
+  // Variant for Classes
   return (
     <motion.div 
+      layout 
       initial={{ opacity: 0, y: 10 }}
-      animate={{ 
-          opacity: 1, 
-          y: 0, 
-          rotate: partyMode ? [0, -5, 5, -5, 5, 0] : 0,
-          scale: partyMode ? 1.02 : 1
-      }}
-      transition={{ delay: routineIndex * 0.05, type: "spring", stiffness: 300, damping: 30 }}
-      whileHover={{ scale: 1.01 }}
-      className={`relative group px-5 py-3 rounded-xl border transition-all duration-300 overflow-hidden ${
-        isCurrent 
-          ? "bg-white dark:bg-zinc-900 border-zinc-300 dark:border-zinc-700 shadow-sm" 
-          : "bg-white dark:bg-zinc-900/40 border-zinc-200 dark:border-zinc-800/50 hover:border-zinc-300 dark:hover:border-zinc-700"
-      } ${
-         isNext ? "bg-zinc-50/50 dark:bg-zinc-900/60" : ""
-      }`}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: routineIndex * 0.05 }}
+      className="relative"
     >
-       {/* Progress Bar Background (Active Only) */}
-       {isCurrent && (
-         <div className="absolute bottom-0 left-0 h-1 bg-zinc-100 dark:bg-zinc-800 w-full" />
-       )}
-       {/* Progress Bar Fill (Active Only) */}
-       {isCurrent && (
-         <motion.div 
-            initial={{ width: 0 }}
-            animate={{ width: `${progress}%` }}
-            transition={{ duration: 1, ease: "linear" }}
-            className="absolute bottom-0 left-0 h-1 bg-blue-500 z-10"
-         />
-       )}
+       <div className={`
+          relative flex items-center justify-between p-4 rounded-2xl border transition-all duration-300
+          ${isCurrent 
+            ? "bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 shadow-sm scale-[1.02] z-10" 
+            : "bg-white dark:bg-transparent border-transparent text-zinc-400 dark:text-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-900/50" 
+          }
+       `}>
+          
+          {/* Active Status Background Blur */}
+          {isCurrent && (
+             <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 rounded-2xl pointer-events-none" />
+          )}
 
-       {/* Active Indicator Line */}
-       {isCurrent && (
-         <div className="absolute left-0 top-3 bottom-3 w-1 bg-blue-500 rounded-r-full" />
-       )}
+          {/* Left: Time & Period */}
+          <div className="flex items-center gap-4 z-10 flex-1 min-w-0">
+             <div className={`
+                flex items-center justify-center w-12 h-12 rounded-xl text-lg font-bold shrink-0
+                ${isCurrent 
+                   ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-sm" 
+                   : "bg-zinc-50 dark:bg-zinc-900/50 text-zinc-400 dark:text-zinc-600"
+                }
+             `}>
+                {periodLabel}
+             </div>
 
-      <div className="flex items-center justify-between relative z-20">
-        <div className="flex-1 min-w-0 pr-4"> 
-           <div className="flex items-baseline gap-2.5 mb-1.5">
-             <span 
-                onClick={(e) => { 
-                    e.stopPropagation(); 
-                    setPartyMode(!partyMode); 
-                }}
-                className="cursor-pointer select-none text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-600 hover:text-blue-500 transition-colors"
-                title="Don't click me..."
-             >
-               P{bell.bell}
-             </span>
-             <h3 className={`text-base font-semibold truncate ${isCurrent ? 'text-zinc-900 dark:text-zinc-100' : 'text-zinc-700 dark:text-zinc-300'}`}>
-               {title || "Free Period"} {partyMode && "🎉"}
-             </h3>
-           </div>
-           
-           <div className="flex items-center gap-4 text-xs text-zinc-500 dark:text-zinc-500">
-               {room && (
-                    <div className="flex items-center gap-1.5 min-w-0">
-                        <MapPin size={12} className="shrink-0 opacity-70" />
-                        <span className="truncate layout-compact-room">{room}</span>
-                    </div>
-               )}
+             <div className="flex flex-col min-w-0">
+                <h3 className={`text-base font-semibold truncate ${isCurrent ? 'text-zinc-900 dark:text-zinc-100' : 'text-zinc-500 dark:text-zinc-500'}`}>
+                   {title || "Free Period"}
+                </h3>
                 
-               {fullTeacher && (
-                     <div className="flex items-center gap-1.5 min-w-0">
-                        <UserIcon size={12} className="shrink-0 opacity-70" />
-                        <span className="truncate layout-compact-teacher">{fullTeacher}</span>
-                    </div>
-                )}
-           </div>
-        </div>
+                {/* Details Row */}
+                <div className="flex items-center gap-x-3 text-xs mt-1 truncate">
+                   <span className="font-mono opacity-80">{time}</span>
+                   
+                   {(room || fullTeacher) && (
+                       <>
+                           <span className="opacity-20">|</span>
+                           {room && (
+                                <span className={`flex items-center gap-1 ${isCurrent ? 'opacity-100' : 'opacity-60'}`}>
+                                    <MapPin size={11} /> {room}
+                                </span>
+                           )}
+                           {fullTeacher && isCurrent && (
+                                <span className="flex items-center gap-1 opacity-80 truncate hidden sm:flex">
+                                    <UserIcon size={11} /> {fullTeacher}
+                                </span>
+                           )}
+                       </>
+                   )}
+                </div>
+             </div>
+          </div>
 
-        {/* Time Badge / Next Indicator */}
-        <div className="flex flex-col items-end gap-1">
-            <div className={`shrink-0 px-2.5 py-1 rounded-md font-mono text-xs whitespace-nowrap ${
-                isCurrent 
-                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300' 
-                    : isNext
-                        ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/30'
-                        : 'bg-zinc-100 dark:bg-zinc-800/50 text-zinc-500 dark:text-zinc-500'
-                }`}>
-                {isNext ? "Next Up" : time}
-            </div>
-            {isNext && <span className="text-[10px] text-zinc-400 font-mono">{time}</span>}
-        </div>
-      </div>
+          {/* Right: Next Indicator */}
+          <div className="z-10 shrink-0 ml-4">
+              {isNext && (
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-zinc-900 dark:bg-zinc-100 text-zinc-100 dark:text-zinc-900">
+                      Next
+                  </span>
+              )}
+          </div>
+          
+          {/* Progress Bar (Innovative: Integrated into border/bottom) */}
+          {isCurrent && (
+             <div className="absolute bottom-0 left-4 right-4 h-[2px] bg-zinc-200 dark:bg-zinc-800 overflow-hidden rounded-full">
+                <motion.div 
+                   className="h-full bg-indigo-500 dark:bg-indigo-400"
+                   initial={{ width: 0 }}
+                   animate={{ width: `${progress}%` }}
+                   transition={{ ease: "linear", duration: 1 }}
+                />
+             </div>
+          )}
+
+       </div>
     </motion.div>
   );
 };
