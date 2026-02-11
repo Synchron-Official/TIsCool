@@ -143,7 +143,13 @@ function App() {
     };
     loadTimetable();
   }, [viewDate, user]); 
-maintenance && currentView !== 'admin') {
+
+  // Date Navigation Helpers
+  const nextDay = () => setViewDate(d => addDays(d, 1));
+  const prevDay = () => setViewDate(d => addDays(d, -1));
+  const resetToday = () => setViewDate(new Date());
+
+  if (maintenance && currentView !== 'admin') {
       return (
         <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center p-8 text-center">
             <div className="bg-red-900/20 p-6 rounded-full border border-red-500/20 mb-6 animate-pulse">
@@ -159,12 +165,6 @@ maintenance && currentView !== 'admin') {
         </div>
       );
   }
-
-  if (
-  // Date Navigation Helpers
-  const nextDay = () => setViewDate(d => addDays(d, 1));
-  const prevDay = () => setViewDate(d => addDays(d, -1));
-  const resetToday = () => setViewDate(new Date());
 
   if (loading) {
     return (
