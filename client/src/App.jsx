@@ -156,7 +156,7 @@ function App() {
                 <AlertOctagon size={64} className="text-red-500" />
             </div>
             <h1 className="text-3xl font-bold text-white mb-2">System Maintenance</h1>
-            <p className="text-zinc-400 max-w-md">The SBHS Timetable application is currently undergoing scheduled maintenance. Please check back later.</p>
+            <p className="text-zinc-400 max-w-md">Synchron is currently undergoing scheduled maintenance. Please check back later.</p>
             {user?.studentId === '449130511' && (
                 <button onClick={() => setCurrentView('admin')} className="mt-8 text-xs text-zinc-600 hover:text-white underline">
                     Admin Bypass
@@ -171,7 +171,7 @@ function App() {
       <div className="min-h-screen bg-white dark:bg-zinc-950 flex items-center justify-center transition-colors">
         <div className="flex flex-col items-center gap-4">
             <div className="w-10 h-10 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
-            <p className="text-zinc-400 text-sm">Loading SBHS...</p>
+            <p className="text-zinc-400 text-sm">Loading Synchron...</p>
         </div>
       </div>
     );
@@ -242,7 +242,7 @@ function App() {
                         {!isSameDay(viewDate, new Date()) && (
                             <button onClick={resetToday} className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
                                 <CalendarIcon size={16} />
-                                Returns to Today
+                                Return to Today
                             </button>
                         )}
                     </div>
