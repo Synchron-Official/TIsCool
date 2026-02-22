@@ -30,7 +30,7 @@ const Navigation = ({ currentView, setView }) => {
              <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center">
                  <span className="text-white font-bold">S</span>
              </div>
-             <span className="text-xl font-bold tracking-tight dark:text-white">SBHS</span>
+             <span className="text-xl font-bold tracking-tight dark:text-white">Synchron</span>
          </div>
 
          {items.map(item => (
