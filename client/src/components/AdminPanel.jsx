@@ -43,7 +43,7 @@ const AdminPanel = ({ user }) => {
     const [editingUser, setEditingUser] = useState(null); // User object for edit modal
 
     useEffect(() => {
-        if (user && ADMIN_IDS.includes(user.studentId)) {
+        if (user && ADMIN_IDS.includes(String(user.studentId))) {
             setIsAuthenticated(true);
         } else {
             setIsAuthenticated(false);
