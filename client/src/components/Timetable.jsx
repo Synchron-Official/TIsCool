@@ -19,7 +19,7 @@ const Timetable = ({ timetableData, showNow = true }) => {
   const innerTimetable = timetable?.timetable || timetable;
 
   if (!innerTimetable || !innerTimetable.periods) {
-       return <div className="p-8 text-center text-zinc-500">No timetable data available.</div>;
+       return <div className="p-8 text-center text-zinc-500">No Classes Today!</div>;
   }
 
   const { periods } = innerTimetable;
@@ -38,7 +38,7 @@ const Timetable = ({ timetableData, showNow = true }) => {
   return (
     <div className="flex flex-col gap-4 max-w-3xl mx-auto w-full">
       <div className="flex items-center justify-between mb-2 px-1">
-        <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">Daily Schedule</h2>
+        <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">Today's Synchron</h2>
         <span className="text-xs font-bold uppercase tracking-widest px-3 py-1 bg-zinc-200 dark:bg-zinc-800/80 backdrop-blur-sm rounded-full text-zinc-700 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700/50">
             {innerTimetable.dayname}
         </span>

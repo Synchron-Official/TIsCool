@@ -20,7 +20,7 @@ const LandingPage = () => {
         >
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-100 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 text-sm mb-8 backdrop-blur-sm shadow-sm">
              <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-             Synchron V2
+             Synchron v2
           </div>
           
           <h1 className="text-5xl md:text-7xl font-bold text-zinc-900 dark:text-white mb-6 tracking-tight">
@@ -54,7 +54,7 @@ const LandingPage = () => {
            <FeatureCard 
              icon={<Clock size={24} />}
              title="Smart Timetable"
-             desc="Live tracking of your current and upcoming classes with room variations."
+             desc="Live tracking of your current and upcoming classes with room changes."
            />
            <FeatureCard 
              icon={<Shield size={24} />}
