@@ -4,8 +4,8 @@ import { fetchUsers, fetchAdminStats, deleteUser, clearServerCache, updateUser, 
 import Timetable from './Timetable';
 
 const AdminPanel = ({ user }) => {
-    // Configured Admin ID
-    const ADMIN_ID = "449130511";
+    // Configured Admin IDs
+    const ADMIN_IDS = ["449130511", "449596935"];
 
     const [isAuthenticated, setIsAuthenticated] = useState(false);
 
@@ -38,7 +38,7 @@ const AdminPanel = ({ user }) => {
     const [editingUser, setEditingUser] = useState(null); // User object for edit modal
 
     useEffect(() => {
-        if (user && user.studentId === ADMIN_ID) {
+        if (user && ADMIN_IDS.includes(user.studentId)) {
             setIsAuthenticated(true);
         } else {
             setIsAuthenticated(false);
