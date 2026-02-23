@@ -141,7 +141,7 @@ app.get('/api/stats', requireAuth, (req, res) => {
         systemStatus: systemState.maintenance ? 'Maintenance' : 'Operational',
         uptime: process.uptime(),
         memoryUsage: process.memoryUsage().heapUsed,
-        activeSesssions: Math.floor(Math.random() * (users.length > 0 ? users.length : 1)) + 1 // Mock
+        activeSessions: Math.floor(Math.random() * (users.length > 0 ? users.length : 1)) + 1 // Mock
     });
 });
 

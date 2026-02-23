@@ -36,7 +36,7 @@ const Timetable = ({ timetableData, showNow = true }) => {
       : -1;
 
   return (
-    <div className="flex flex-col gap-4 max-w-3xl mx-auto w-full">
+    <div className="flex flex-col gap-2 max-w-3xl mx-auto w-full">
       <div className="flex items-center justify-between mb-2 px-1">
         <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">Today's Synchron</h2>
         <span className="text-xs font-bold uppercase tracking-widest px-3 py-1 bg-zinc-200 dark:bg-zinc-800/80 backdrop-blur-sm rounded-full text-zinc-700 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700/50">
@@ -44,7 +44,7 @@ const Timetable = ({ timetableData, showNow = true }) => {
         </span>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-2">
         {routine.map((bellId, index) => {
           const bell = bells.find(b => b.bell === bellId);
           if (!bell) return null;

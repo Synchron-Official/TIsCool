@@ -42,6 +42,25 @@ function App() {
   const [broadcast, setBroadcast] = useState(null);
   const [maintenance, setMaintenance] = useState(false);
 
+  // Poll System Status
+  useEffect(() => {
+    const pollStatus = async () => {
+        try {
+            const systemData = await fetchSystemStatus();
+            if (systemData) {
+                setBroadcast(systemData.broadcast);
+                setMaintenance(systemData.maintenance);
+            }
+        } catch (e) {
+            console.error("Failed to poll system status", e);
+        }
+    };
+    
+    // Poll every 30 seconds
+    const interval = setInterval(pollStatus, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Theme Config
   useEffect(() => {
     const root = window.document.documentElement;

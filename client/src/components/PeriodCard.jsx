@@ -21,12 +21,12 @@ const PeriodCard = ({ period, bell, isCurrent, isNext, routineIndex, currentMinu
            initial={{ opacity: 0 }}
            animate={{ opacity: 1 }}
            transition={{ delay: routineIndex * 0.05 }}
-           className="relative flex items-center justify-center py-6"
+           className="relative flex items-center justify-center py-3"
         >
             <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-zinc-200 dark:border-zinc-800"></div>
             </div>
-            <div className="relative flex justify-center text-xs uppercase tracking-widest px-4 bg-white dark:bg-zinc-950 text-zinc-500 dark:text-zinc-500">
+            <div className="relative flex justify-center text-[10px] uppercase tracking-widest px-4 bg-white dark:bg-zinc-950 text-zinc-500 dark:text-zinc-500">
                 {bell.bellDisplay}
             </div>
         </motion.div>
@@ -43,22 +43,22 @@ const PeriodCard = ({ period, bell, isCurrent, isNext, routineIndex, currentMinu
       className="relative"
     >
        <div className={`
-          relative flex items-center justify-between p-4 rounded-2xl border transition-all duration-300
+          relative flex items-center justify-between p-3 rounded-xl border transition-all duration-300
           ${isCurrent 
-            ? "bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 shadow-sm scale-[1.02] z-10" 
+            ? "bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 shadow-sm scale-[1.01] z-10" 
             : "bg-white dark:bg-transparent border-transparent text-zinc-600 dark:text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-900/50" 
           }
        `}>
           
           {/* Active Status Background Blur */}
           {isCurrent && (
-             <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 rounded-2xl pointer-events-none" />
+             <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 rounded-xl pointer-events-none" />
           )}
 
           {/* Left: Time & Period */}
-          <div className="flex items-center gap-4 z-10 flex-1 min-w-0">
+          <div className="flex items-center gap-3 z-10 flex-1 min-w-0">
              <div className={`
-                flex items-center justify-center w-12 h-12 rounded-xl text-lg font-bold shrink-0
+                flex items-center justify-center w-10 h-10 rounded-lg text-base font-bold shrink-0
                 ${isCurrent 
                    ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-sm" 
                    : "bg-zinc-50 dark:bg-zinc-900/50 text-zinc-500 dark:text-zinc-500"
@@ -68,12 +68,12 @@ const PeriodCard = ({ period, bell, isCurrent, isNext, routineIndex, currentMinu
              </div>
 
              <div className="flex flex-col min-w-0">
-                <h3 className={`text-base font-semibold truncate ${isCurrent ? 'text-zinc-900 dark:text-zinc-100' : 'text-zinc-500 dark:text-zinc-500'}`}>
+                <h3 className={`text-sm font-semibold truncate ${isCurrent ? 'text-zinc-900 dark:text-zinc-100' : 'text-zinc-500 dark:text-zinc-500'}`}>
                    {title || "Free Period"}
                 </h3>
                 
                 {/* Details Row */}
-                <div className="flex items-center gap-x-3 text-xs mt-1 truncate">
+                <div className="flex items-center gap-x-2 text-[11px] mt-0.5 truncate">
                    <span className="font-mono opacity-80">{time}</span>
                    
                    {(room || fullTeacher) && (

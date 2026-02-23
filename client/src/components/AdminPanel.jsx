@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Lock, ShieldCheck, AlertCircle, Users, Activity, Settings, Search, MoreVertical, RefreshCw, Trash2, Eye, Edit2, X, Terminal, Radio, MessageSquare, Zap } from 'lucide-react';
+import { Lock, ShieldCheck, AlertCircle, Users, Activity, Settings, Search, MoreVertical, RefreshCw, Trash2, Eye, Edit2, X, Terminal, Radio, MessageSquare, Zap, Info } from 'lucide-react';
 import { fetchUsers, fetchAdminStats, deleteUser, clearServerCache, updateUser, fetchLogs, setBroadcast, setMaintenanceMode } from '../services/adminApi';
+import { fetchSystemStatus } from '../services/api';
 import Timetable from './Timetable';
 
 const AdminPanel = ({ user }) => {
@@ -13,6 +14,7 @@ const AdminPanel = ({ user }) => {
     const [users, setUsers] = useState([]);
     const [stats, setStats] = useState(null);
     const [logs, setLogs] = useState([]);
+    const [currentBroadcast, setCurrentBroadcast] = useState(null);
     const [loading, setLoading] = useState(false);
     const [apiError, setApiError] = useState(null);
 
@@ -34,6 +36,9 @@ const AdminPanel = ({ user }) => {
     // UI States
     const [activeTab, setActiveTab] = useState('overview');
     const [searchTerm, setSearchTerm] = useState('');
+    const [logSearchTerm, setLogSearchTerm] = useState('');
+    const [roleFilter, setRoleFilter] = useState('All');
+    const [statusFilter, setStatusFilter] = useState('All');
     const [viewingUserId, setViewingUserId] = useState(null); // ID only, derive user from list
     const [editingUser, setEditingUser] = useState(null); // User object for edit modal
 
@@ -48,14 +53,16 @@ const AdminPanel = ({ user }) => {
     const loadData = async () => {
         setLoading(true);
         try {
-            const [usersData, statsData, logsData] = await Promise.all([
+            const [usersData, statsData, logsData, systemData] = await Promise.all([
                 fetchUsers(),
                 fetchAdminStats(),
-                fetchLogs()
+                fetchLogs(),
+                fetchSystemStatus()
             ]);
             setUsers(usersData);
             setStats(statsData);
             setLogs(logsData);
+            setCurrentBroadcast(systemData?.broadcast || null);
         } catch (err) {
             setApiError('Failed to fetch data from server. Ensure backend is running.');
             console.error(err);
@@ -122,6 +129,33 @@ const AdminPanel = ({ user }) => {
             alert("Failed to clear server cache.");
         }
     };
+
+    const handleExportCSV = () => {
+        const headers = ['ID', 'Name', 'Email', 'Role', 'Year', 'Status', 'Joined'];
+        const csvContent = [
+            headers.join(','),
+            ...filteredUsers.map(u => [
+                u.id,
+                `"${u.name || ''}"`,
+                `"${u.email || ''}"`,
+                u.role,
+                u.year || '',
+                u.status,
+                u.joined ? new Date(u.joined).toLocaleDateString() : ''
+            ].join(','))
+        ].join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `users_export_${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     const handleBroadcast = async (e) => {
         e.preventDefault();
         try {
@@ -134,9 +168,18 @@ const AdminPanel = ({ user }) => {
         }
     };
 
-    const filteredUsers = users.filter(user =>
-        user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email?.toLowerCase().includes(searchTerm.toLowerCase())
+    const filteredUsers = users.filter(user => {
+        const matchesSearch = user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                              user.email?.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesRole = roleFilter === 'All' || user.role === roleFilter;
+        const matchesStatus = statusFilter === 'All' || user.status === statusFilter;
+        return matchesSearch && matchesRole && matchesStatus;
+    });
+
+    const filteredLogs = logs.filter(log => 
+        log.action?.toLowerCase().includes(logSearchTerm.toLowerCase()) ||
+        log.user?.toLowerCase().includes(logSearchTerm.toLowerCase()) ||
+        log.details?.toLowerCase().includes(logSearchTerm.toLowerCase())
     );
 
     const TabButton = ({ id, label, icon: Icon }) => (
@@ -258,13 +301,15 @@ const AdminPanel = ({ user }) => {
 
             <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm relative overflow-hidden group">
                 <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                    <Settings size={60} />
+                    <Users size={60} />
                 </div>
                 <div>
-                    <p className="text-sm font-medium text-zinc-500">Environment</p>
-                    <h3 className="text-3xl font-bold text-zinc-900 dark:text-white mt-1 capitalize">{import.meta.env.MODE}</h3>
+                    <p className="text-sm font-medium text-zinc-500">Active Sessions</p>
+                    <h3 className="text-3xl font-bold text-zinc-900 dark:text-white mt-1">
+                        {loading ? '...' : (stats?.activeSessions || 0)}
+                    </h3>
                     <div className="text-xs text-zinc-500 mt-2">
-                        v1.2.0-beta
+                        Estimated current users
                     </div>
                 </div>
             </div>
@@ -277,17 +322,29 @@ const AdminPanel = ({ user }) => {
                 <Terminal size={14} className="text-zinc-400" />
                 <span className="text-zinc-400 font-medium text-xs">root@server:~ logs</span>
             </div>
-            <div className="flex gap-1.5">
-                <div className="w-2.5 h-2.5 rounded-full bg-red-500/20 text-red-500 border border-red-500/50"></div>
-                <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/20 text-yellow-500 border border-yellow-500/50"></div>
-                <div className="w-2.5 h-2.5 rounded-full bg-green-500/20 text-green-500 border border-green-500/50"></div>
+            <div className="flex items-center gap-4">
+                <div className="relative">
+                    <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-zinc-500" />
+                    <input
+                        type="text"
+                        placeholder="grep logs..."
+                        value={logSearchTerm}
+                        onChange={(e) => setLogSearchTerm(e.target.value)}
+                        className="pl-7 pr-2 py-1 bg-zinc-950 border border-zinc-800 rounded text-xs text-zinc-300 focus:outline-none focus:border-zinc-600 w-32 md:w-48"
+                    />
+                </div>
+                <div className="flex gap-1.5">
+                    <div className="w-2.5 h-2.5 rounded-full bg-red-500/20 text-red-500 border border-red-500/50"></div>
+                    <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/20 text-yellow-500 border border-yellow-500/50"></div>
+                    <div className="w-2.5 h-2.5 rounded-full bg-green-500/20 text-green-500 border border-green-500/50"></div>
+                </div>
             </div>
         </div>
         <div className="p-4 h-64 overflow-y-auto space-y-1 text-zinc-300 custom-scrollbar">
-            {logs.length === 0 ? (
+            {filteredLogs.length === 0 ? (
                 <div className="text-zinc-600 italic">Waiting for system events...</div>
             ) : (
-                logs.map((log, i) => (
+                filteredLogs.map((log, i) => (
                     <div key={i} className="flex gap-3 hover:bg-zinc-900/50 p-0.5 rounded">
                         <span className="text-zinc-600 select-none">[{new Date(log.timestamp).toLocaleTimeString()}]</span>
                         <span className={`font-bold ${log.action === 'ERROR' ? 'text-red-400' :
@@ -321,6 +378,20 @@ const AdminPanel = ({ user }) => {
                 <h2 className="text-2xl font-bold dark:text-white">System Broadcast</h2>
                 <p className="text-zinc-500 mt-2">Send a global alert message to all active users</p>
             </div>
+
+            {currentBroadcast && (
+                <div className={`mb-6 p-4 rounded-xl border ${
+                    currentBroadcast.type === 'error' ? 'bg-red-50 border-red-200 text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400' :
+                    currentBroadcast.type === 'warning' ? 'bg-orange-50 border-orange-200 text-orange-700 dark:bg-orange-900/20 dark:border-orange-800 dark:text-orange-400' :
+                    'bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-400'
+                }`}>
+                    <div className="flex items-center gap-2 mb-1">
+                        <Info size={16} />
+                        <h3 className="font-bold text-sm uppercase tracking-wider">Current Active Broadcast</h3>
+                    </div>
+                    <p className="text-sm">{currentBroadcast.message}</p>
+                </div>
+            )}
 
             <form onSubmit={handleBroadcast} className="space-y-6">
                 <div>
@@ -356,10 +427,19 @@ const AdminPanel = ({ user }) => {
                 </div>
 
                 <div className="pt-4 flex gap-4">
-                    {broadcastMsg && (
+                    {currentBroadcast && (
                         <button
                             type="button"
-                            onClick={() => { setBroadcastMsg(''); setBroadcast('', 'info'); }}
+                            onClick={async () => { 
+                                try {
+                                    await setBroadcast('', 'info');
+                                    alert("Broadcast cleared successfully!");
+                                    setBroadcastMsg('');
+                                    loadData();
+                                } catch (err) {
+                                    alert("Failed to clear broadcast");
+                                }
+                            }}
                             className="flex-1 py-3 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-xl font-medium transition-colors"
                         >
                             Clear Broadcast
@@ -380,17 +460,48 @@ const AdminPanel = ({ user }) => {
 {
     activeTab === 'users' && (
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm overflow-hidden">
-            <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center bg-zinc-50/50 dark:bg-zinc-900/50">
-                <h3 className="font-semibold text-zinc-900 dark:text-white">User Management</h3>
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
-                    <input
-                        type="text"
-                        placeholder="Search users..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-9 pr-4 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
+            <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 flex flex-col md:flex-row justify-between items-center gap-4 bg-zinc-50/50 dark:bg-zinc-900/50">
+                <div className="flex items-center gap-4 w-full md:w-auto justify-between">
+                    <h3 className="font-semibold text-zinc-900 dark:text-white">User Management</h3>
+                    <button 
+                        onClick={handleExportCSV}
+                        className="text-xs font-medium px-3 py-1.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-lg transition-colors"
+                    >
+                        Export CSV
+                    </button>
+                </div>
+                <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+                    <select
+                        value={roleFilter}
+                        onChange={(e) => setRoleFilter(e.target.value)}
+                        className="px-3 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                        <option value="All">All Roles</option>
+                        <option value="Student">Student</option>
+                        <option value="Prefect">Prefect</option>
+                        <option value="Teacher">Teacher</option>
+                        <option value="Admin">Admin</option>
+                    </select>
+                    <select
+                        value={statusFilter}
+                        onChange={(e) => setStatusFilter(e.target.value)}
+                        className="px-3 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                        <option value="All">All Statuses</option>
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                        <option value="Warning">Warning</option>
+                    </select>
+                    <div className="relative flex-1 md:w-64">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                        <input
+                            type="text"
+                            placeholder="Search users..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full pl-9 pr-4 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
                 </div>
             </div>
             <div className="overflow-x-auto">
