@@ -214,10 +214,11 @@ const AdminPanel = ({ user }) => {
                             <h3 className="text-3xl font-bold text-zinc-900 dark:text-white mt-1">
                                 {loading ? '...' : (stats?.totalUsers || users.length || 0)}
                             </h3>
-                            <div className="text-xs text-green-600 mt-2 flex items-center gap-1">
-                                <Zap size={`text-3xl font-bold mt-1 ${
+                            <div className={`text-xs mt-2 flex items-center gap-1 ${
                                 stats?.systemStatus === 'Maintenance' ? 'text-red-500' : 'text-green-600'
-                            }`}
+                            }`}>
+                                <Zap size={14} />
+                                {stats?.systemStatus === 'Maintenance' ? 'Maintenance Mode' : 'System Operational'}
                             </div>
                         </div>
                     </div>
