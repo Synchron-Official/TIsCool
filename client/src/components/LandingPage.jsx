@@ -39,7 +39,7 @@ const LandingPage = () => {
             onClick={performLogin}
             className="group relative inline-flex items-center gap-3 px-8 py-4 bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 text-lg font-semibold rounded-full hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors shadow-xl shadow-zinc-900/10 dark:shadow-white/10"
           >
-            Sign in with SBHS
+            Sign in to Synchron
             <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
           </motion.button>
         </motion.div>
