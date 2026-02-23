@@ -5,7 +5,7 @@ import { fetchSystemStatus } from '../services/api';
 import Timetable from './Timetable';
 
 const AdminPanel = ({ user }) => {
-    // Configured Admin IDs
+    // Configure Admin IDs
     const ADMIN_IDS = ["449130511", "449596935"];
 
     const [isAuthenticated, setIsAuthenticated] = useState(false);
