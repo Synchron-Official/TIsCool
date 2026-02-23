@@ -6,7 +6,7 @@ import Timetable from './Timetable';
 
 const AdminPanel = ({ user }) => {
     // Configure Admin IDs
-    const ADMIN_IDS = ["449130511", "449596935"];
+    const ADMIN_IDS = ["449596935" ,"449130511"];
 
     const [isAuthenticated, setIsAuthenticated] = useState(false);
 
