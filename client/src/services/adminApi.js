@@ -1,4 +1,4 @@
-const ADMIN_API_URL = import.meta.env.VITE_ADMIN_API_URL || 'https://timetable-sbhs-server.vercel.app/api';
+const ADMIN_API_URL = import.meta.env.VITE_ADMIN_API_URL || 'https://t-is-cool.vercel.app/api';
 
 const getHeaders = () => {
     const password = import.meta.env.VITE_ADMIN_PASSWORD;
