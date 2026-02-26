@@ -6,6 +6,7 @@ import CalendarView from './components/CalendarView';
 import DailyNotices from './components/DailyNotices';
 import AdminPanel from './components/AdminPanel';
 import LandingPage from './components/LandingPage';
+import Home from './components/Home';
 import { 
   fetchDayTimetable, 
   fetchDailyNews, 
@@ -22,7 +23,7 @@ import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Info, AlertTriangl
 function App() {
   // State
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
-  const [currentView, setCurrentView] = useState('timetable');
+  const [currentView, setCurrentView] = useState('home');
   const [viewDate, setViewDate] = useState(new Date());
 
   useEffect(() => {
@@ -236,6 +237,17 @@ function App() {
 
          <div className="p-4 md:p-8 max-w-7xl mx-auto">
             
+            {/* HOME VIEW */}
+            {currentView === 'home' && (
+                <Home 
+                    user={user} 
+                    timetable={timetable} 
+                    notices={notices} 
+                    setView={setCurrentView} 
+                    setViewDate={setViewDate}
+                />
+            )}
+
             {/* TIMETABLE VIEW */}
             {currentView === 'timetable' && (
                 <div className="space-y-6">
