@@ -7,6 +7,7 @@ import DailyNotices from './components/DailyNotices';
 import AdminPanel from './components/AdminPanel';
 import LandingPage from './components/LandingPage';
 import Home from './components/Home';
+import VersionToast from './components/VersionToast';
 import { 
   fetchDayTimetable, 
   fetchDailyNews, 
@@ -42,6 +43,7 @@ function App() {
   // System State
   const [broadcast, setBroadcast] = useState(null);
   const [maintenance, setMaintenance] = useState(false);
+  const [showUpdate, setShowUpdate] = useState(false);
 
   // Poll System Status
   useEffect(() => {
@@ -51,16 +53,36 @@ function App() {
             if (systemData) {
                 setBroadcast(systemData.broadcast);
                 setMaintenance(systemData.maintenance);
+                
+                // Track version
+                const localVersion = localStorage.getItem('app_version');
+                if (systemData.version) {
+                    if (!localVersion) {
+                        localStorage.setItem('app_version', systemData.version);
+                    } else if (localVersion !== systemData.version) {
+                        setShowUpdate(true);
+                    }
+                }
             }
         } catch (e) {
             console.error("Failed to poll system status", e);
         }
     };
     
+    // Initial check
+    pollStatus();
+    
     // Poll every 30 seconds
     const interval = setInterval(pollStatus, 30000);
     return () => clearInterval(interval);
   }, []);
+
+  const handleUpdate = () => {
+    // Clear everything and reload to force get the new backend code/data
+    localStorage.clear();
+    sessionStorage.clear();
+    window.location.reload();
+  };
 
   // Theme Config
   useEffect(() => {
@@ -316,6 +338,13 @@ function App() {
 
          </div>
       </main>
+
+      {showUpdate && (
+        <VersionToast 
+          onUpdate={handleUpdate} 
+          onClose={() => setShowUpdate(false)} 
+        />
+      )}
     </div>
   );
 }
