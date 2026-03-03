@@ -17,7 +17,7 @@ const DailyNotices = ({ notices }) => {
             <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-600 dark:text-emerald-400">
                 <Megaphone size={18} />
             </div>
-            <h2 className="text-lg font-bold tracking-tight">Daily Briefing</h2>
+            <h2 className="text-lg font-bold tracking-tight">Daily Notices</h2>
         </div>
       </div>
 

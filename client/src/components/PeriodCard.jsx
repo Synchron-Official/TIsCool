@@ -15,7 +15,7 @@ const PeriodCard = ({ period, bell, isCurrent, isNext, routineIndex, currentMinu
   const periodLabel = bell.bell;
 
   // Variant for Breaks: "Divider" style
-  if (bell.bell === "R" || bell.bell === "L") {
+  if (bell.bell === "R" || bell.bell === "L" || bell.bell === "RC") {
      return (
         <motion.div 
            initial={{ opacity: 0 }}

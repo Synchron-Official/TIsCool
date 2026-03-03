@@ -7,6 +7,7 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+const VERSION = '1.0.2'; // Increment this to trigger update
 
 // Middleware
 const allowedOrigins = ['https://www.synchron.work', 'http://localhost:5173', 'http://localhost:3000'];
@@ -171,7 +172,8 @@ app.get('/api/broadcast', requireAuth, (req, res) => {
 app.get('/api/system/status', (req, res) => {
     res.json({
         maintenance: systemState.maintenance,
-        broadcast: systemState.broadcast
+        broadcast: systemState.broadcast,
+        version: VERSION
     });
 });
 

@@ -7,7 +7,7 @@ const Header = ({ user, onLogout }) => {
       <div className="flex flex-col">
         <h1 className="text-xl font-bold text-zinc-100 tracking-tight flex items-center gap-2">
           <div className="w-2 h-6 bg-blue-500 rounded-full"></div>
-          SBHS Portal
+          Synchron
         </h1>
         <span className="text-sm text-zinc-500 mt-1">
            {new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
