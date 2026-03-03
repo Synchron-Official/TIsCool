@@ -5,7 +5,7 @@ const Header = ({ user, onLogout }) => {
   return (
     <header className="flex items-center justify-between px-8 py-5 bg-zinc-950/80 backdrop-blur-xl border-b border-zinc-900/50 sticky top-0 z-50">
       <div className="flex flex-col">
-        <h1 className="text-xl font-bold text-zinc-100 tracking-tight flex items-center gap-2">
+        <h1 className="text-xl font-bold text-zinc-200 tracking-tight flex items-center gap-2">
           <div className="w-2 h-6 bg-blue-500 rounded-full"></div>
           Synchron
         </h1>

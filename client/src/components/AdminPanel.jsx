@@ -5,7 +5,7 @@ import { fetchSystemStatus } from '../services/api';
 import Timetable from './Timetable';
 
 const AdminPanel = ({ user }) => {
-    // Configure Admin IDs
+    // Configured Admin IDs
     const ADMIN_IDS = ["449130511", "449596935"];
 
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -43,7 +43,7 @@ const AdminPanel = ({ user }) => {
     const [editingUser, setEditingUser] = useState(null); // User object for edit modal
 
     useEffect(() => {
-        if (user && ADMIN_IDS.includes(String(user.studentId).trim())) {
+        if (user && ADMIN_IDS.includes(user.studentId)) {
             setIsAuthenticated(true);
         } else {
             setIsAuthenticated(false);
