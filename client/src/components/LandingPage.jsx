@@ -25,7 +25,7 @@ const LandingPage = () => {
           
           <h1 className="text-5xl md:text-7xl font-bold text-zinc-900 dark:text-white mb-6 tracking-tight">
             Your School Day, <br />
-            <span className="text-zinc-500 dark:text-zinc-500">Reimagined.</span>
+            <span className="text-zinc-500 dark:text-zinc-500">Reimagined!</span>
           </h1>
           
           <p className="text-lg md:text-xl text-zinc-600 dark:text-zinc-400 max-w-2xl mx-auto mb-10 leading-relaxed">
